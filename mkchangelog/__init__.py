@@ -871,7 +871,7 @@ def get_command_class(input):
 
 
 def main():
-    prog = "changelog"
+    prog = "mkchangelog"
     description = "Manage CHANGELOG and versions"
 
     parser = argparse.ArgumentParser(prog=prog, description=description)
