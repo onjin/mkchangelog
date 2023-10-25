@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023-present Marek Wywiał <onjinx@gmail.com>
+# spdx-filecopyrighttext: 2023-present Marek Wywiał <onjinx@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 
@@ -7,21 +7,60 @@ import logging
 import os
 import re
 import sys
-from collections import Counter, defaultdict, namedtuple
+import time
+from abc import abstractmethod
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from distutils.util import strtobool
+from functools import partial
 from io import StringIO
 from itertools import groupby, tee
 from operator import attrgetter
-from typing import List
+from typing import Dict, Iterator, List, NoReturn, Set, Tuple
 
-import consolemd
 import semver
-from git import Repo
+from git import Commit, Repo
+
+try:
+    import rich
+
+    use_colors = True
+except ImportError:
+    rich = None
+    use_colors = False
+
+TZ_INFO = datetime.now().astimezone().tzinfo
 
 logger = logging.getLogger(__file__)
 env = os.getenv
+
+
+def print_markdown(markdown: str, *, colors: bool = False):
+    if colors and use_colors:
+        from rich.console import Console
+        from rich.markdown import Markdown
+
+        console = Console()
+        md = Markdown(markdown)
+        console.print(md)
+    else:
+        sys.stdout.write(markdown)
+
+
+def print_color(color: str, text: str):
+    if use_colors:
+        from rich.console import Console
+
+        Console().print(f"[{color}]{text}[/{color}]")
+    else:
+        sys.stdout.write(text)
+
+
+print_blue = partial(print_color, "blue")
+print_green = partial(print_color, "green")
+print_orange = partial(print_color, "orange")
+
 
 COMMANDS = {}
 ALIASES = {}
@@ -93,11 +132,11 @@ class MatchedLine:
 @dataclass(slots=True, frozen=True)
 class Version:
     name: str
-    date: str
+    date: datetime
     semver: str
 
 
-def yes_or_no(question, default="no"):
+def yes_or_no(question: str, default: str | None = "no") -> bool:
     """Ask question and wait for yes or no decision.
 
     Args:
@@ -127,14 +166,14 @@ def yes_or_no(question, default="no"):
             sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
 
-def group_commits_by_type(commits):
+def group_commits_by_type(commits: Iterator[Commit]):
     return groupby(
         sorted(commits, key=lambda x: ORDERING.get(x.commit_type, 50)),
-        attrgetter("type"),
+        attrgetter("commit_type"),
     )
 
 
-def get_references_from_msg(msg):
+def get_references_from_msg(msg: bytes) -> Dict[str, Set[str]]:
     """Get references from commit message
 
     Args:
@@ -153,7 +192,7 @@ def get_references_from_msg(msg):
     if not result:
         return None
 
-    refs = defaultdict(set)
+    refs: Dict[str, Set[str]] = defaultdict(set)
     for line in result:
         action, value = line
         for ref in value.split(","):
@@ -161,7 +200,7 @@ def get_references_from_msg(msg):
     return refs
 
 
-def add_stdout_handler(logger, verbosity):
+def add_stdout_handler(logger: logging.Logger, verbosity: int) -> NoReturn:
     """Adds stdout handler with given verbosity to logger.
 
     Args:
@@ -178,38 +217,14 @@ def add_stdout_handler(logger, verbosity):
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-    V_MAP = {1: logging.ERROR, 2: logging.INFO, 3: logging.DEBUG}
-    level = V_MAP.get(verbosity, 1)
+    v_map = {1: logging.ERROR, 2: logging.INFO, 3: logging.DEBUG}
+    level = v_map.get(verbosity, 1)
     handler.setLevel(level)
     logger.addHandler(handler)
     logger.setLevel(level)
 
 
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-
-
-def bprint(text, *args, **kwargs):
-    """Print helper to print colored texts.
-
-    Just add bcolors.ENDC to given text
-
-    Args:
-        text (str): strint to print
-        args (tuple): optional args
-        kwargs (dict): optional kwargs
-    """
-    print(text + bcolors.ENDC, *args, **kwargs)
-
-
-def v2s(prefix, version):
+def v2s(prefix: str, version: str) -> semver.Version:
     """Convert version name to semantic version
 
     Args:
@@ -219,10 +234,10 @@ def v2s(prefix, version):
     Returns:
         semver.Semver - semantic version object
     """
-    return semver.parse_version_info(version[len(prefix) :])
+    return semver.Version.parse(version[len(prefix) :])
 
 
-def get_git_versions(tag_prefix):
+def get_git_versions(tag_prefix: str) -> List[semver.Version]:
     """Return versions lists
 
     Args:
@@ -244,7 +259,7 @@ def get_git_versions(tag_prefix):
     return sorted(versions, key=lambda v: v[1], reverse=True)
 
 
-def get_last_version(tag_prefix):
+def get_last_version(tag_prefix: str) -> Version | None:
     """Return last bumped bersion
 
     Args:
@@ -259,7 +274,7 @@ def get_last_version(tag_prefix):
     return versions[0]
 
 
-def get_next_version(tag_prefix, current_version, commits):
+def get_next_version(tag_prefix: str, current_version: str, commits: List[LogLine]) -> Version | None:
     """Return next version or None if not available
 
     Args:
@@ -274,7 +289,7 @@ def get_next_version(tag_prefix, current_version, commits):
     current_version = str(next_version)
 
     # count types {{{
-    types = Counter()
+    types: dict[str, int] = Counter()
     for commit in commits:
         types[commit.commit_type] += 1
         if commit.breaking_change:
@@ -282,8 +297,8 @@ def get_next_version(tag_prefix, current_version, commits):
     # count types }}}
 
     # bump version {{{
-    breaking_change = types.get("breaking_change", None)
-    if breaking_change and breaking_change > 0:
+    breaking_change: int = types.get("breaking_change", 0)
+    if breaking_change > 0:
         next_version = next_version.bump_major()
     elif "feat" in types.keys():
         next_version = next_version.bump_minor()
@@ -295,10 +310,10 @@ def get_next_version(tag_prefix, current_version, commits):
     if semver.compare(current_version, str(next_version)) == 0:
         return None
     name = f"{tag_prefix}{next_version!s}"
-    return Version(name=name, date=datetime.now(), semver=next_version)
+    return Version(name=name, date=datetime.now(tz=TZ_INFO), semver=next_version)
 
 
-def get_git_log(max_count=1000, rev=None, types=None):
+def get_git_log(max_count: int = 1000, rev: str | None = None, types: List[str] | None = None):
     """Return git log parsed using Conventional Commit format.
 
     Args:
@@ -310,16 +325,16 @@ def get_git_log(max_count=1000, rev=None, types=None):
     cc_commits = (MatchedLine(c, CC_REGEXP.match(c.summary).groupdict()) for c in commits if CC_REGEXP.match(c.summary))
     messages = (
         LogLine(
-            subject=l.log.summary.encode(l.log.encoding),
-            message=l.log.message.encode(l.log.encoding),
-            revert=True if l.groups["revert"] else False,
-            commit_type=l.groups["type"],
-            scope=l.groups["scope"][1:-1] if l.groups["scope"] else l.groups["scope"],
-            title=l.groups["title"],
-            references=get_references_from_msg(l.log.message.encode(l.log.encoding)),
-            breaking_change=(BC_REGEXP.findall(l.log.message) or [None])[0],
+            subject=line.log.summary.encode(line.log.encoding),
+            message=line.log.message.encode(line.log.encoding),
+            revert=True if line.groups["revert"] else False,
+            commit_type=line.groups["type"],
+            scope=line.groups["scope"][1:-1] if line.groups["scope"] else line.groups["scope"],
+            title=line.groups["title"],
+            references=get_references_from_msg(line.log.message.encode(line.log.encoding)),
+            breaking_change=(BC_REGEXP.findall(line.log.message) or [None])[0],
         )
-        for l in cc_commits
+        for line in cc_commits
     )
     if types and "all" not in types:
         log_types = types
@@ -506,26 +521,27 @@ class MetaRegistry(type):
 class Command(metaclass=MetaRegistry):
     """Base Command class."""
 
-    name = "base"
-    aliases = []
+    name: str = "base"
+    aliases: Tuple[str]
+
+    def __init__(self, options: argparse.Namespace):
+        self.options = options
+        self.aliases = ()
 
     @staticmethod
-    def add_arguments(parser):
-        # command might not require any sub arguments
-        pass
+    @abstractmethod
+    def add_arguments(parser: argparse.ArgumentParser) -> None:
+        raise NotImplementedError
 
-    def __init__(self, options):
-        self.options = options
-
-    def execute(self):
-        raise NotImplementedError()
+    def execute(self) -> None:
+        raise NotImplementedError
 
 
 class BumpCommand(Command):
     """Manage version."""
 
     name = "bump"
-    aliases = ["b"]
+    aliases = ("b",)
 
     @staticmethod
     def add_arguments(parser):
@@ -564,28 +580,37 @@ class BumpCommand(Command):
             nargs="+",
             type=str,
             default=["all"],
+            choices=[*TYPES.keys(), "all"],
         )
 
     def execute(self):
         version = get_last_version(tag_prefix=self.options.prefix)
+        if version:
+            version_name = version.name
+            version_date = version.date.strftime(DATE_FORMAT)
+            rev = (f"HEAD...{version_name}",)
+        else:
+            version_name = f"{self.options.prefix}0.0.0"
+            version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
+            rev = "HEAD"
 
-        bprint(f"Current version: {bcolors.OKBLUE}{version.name} ({version.date.strftime(DATE_FORMAT)})")
+        print_blue(f"Current version: {version_name} ({version_date})")
         commits = get_git_log(
             max_count=self.options.max_count,
-            rev=f"HEAD...{version.name}",
+            rev=rev,
             types=self.options.types,
         )
 
         next_version = get_next_version(
             tag_prefix=self.options.prefix,
-            current_version=version.name,
+            current_version=version_name,
             commits=commits,
         )
 
         if next_version:
-            bprint(f"Next version:    {bcolors.OKGREEN}{next_version.name} ({next_version.date.strftime(DATE_FORMAT)})")
+            print_green(f"Next version:    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})")
         else:
-            print("--> No next version available")
+            sys.stdout.write("--> No next version available")
             return
 
         if yes_or_no(
@@ -595,24 +620,23 @@ class BumpCommand(Command):
             output = StringIO()
             get_markdown_version(
                 from_version="HEAD",
-                to_version=version.name,
+                to_version=version_name,
                 commit_types=self.options.types,
                 max_count=self.options.max_count,
                 output=output,
             )
             output.seek(0)
-            renderer = consolemd.Renderer(style_name="native")
-            renderer.render(output.read())
+            print_markdown(output.read(), colors=True)
 
         if not yes_or_no(
             f"--> Generate {self.options.output} and tag version?",
             default="no",
         ):
-            bprint(f"{bcolors.WARNING}Exiting")
+            print_orange("Exiting")
             return
 
         # generate changelog for current version {{{
-        bprint(f"Generating:      {bcolors.BOLD}{bcolors.OKGREEN}{self.options.output}")
+        print_green(f"Generating:      {self.options.output}")
         with open(self.options.output, "w") as output:
             output.write(
                 get_markdown_changelog(
@@ -624,7 +648,7 @@ class BumpCommand(Command):
                 )
             )
 
-        bprint(f"Commiting:       {bcolors.BOLD}{bcolors.OKGREEN}{self.options.output}")
+        print_green(f"Commiting:       {self.options.output}")
         # commit CHANGELOG.md
         git_commit(
             files=[self.options.output],
@@ -633,7 +657,7 @@ class BumpCommand(Command):
         # generate changelog for current version }}}
 
         # tag version {{{
-        bprint(f"Creating tag:    {bcolors.BOLD}{bcolors.OKGREEN}{next_version.name}")
+        print_green(f"Creating tag:    {next_version.name}")
         # create tag with "chore(version): new version v1.1.1"
         create_tag(
             name=next_version.name,
@@ -646,10 +670,10 @@ class GenerateCommand(Command):
     """Manage version."""
 
     name = "generate"
-    aliases = ["g", "gen"]
+    aliases = ("g", "gen")
 
     @staticmethod
-    def add_arguments(parser):
+    def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
             "-c",
             "--cli",
@@ -691,6 +715,7 @@ class GenerateCommand(Command):
             nargs="+",
             type=str,
             default=["fix", "feat"],
+            choices=[*TYPES.keys(), "all"],
         )
 
     def execute(self):
@@ -701,23 +726,17 @@ class GenerateCommand(Command):
             max_count=self.options.max_count,
             head_name=self.options.head_name,
         )
-        if self.options.cli:
-            renderer = consolemd.Renderer(style_name="native")
-            renderer.render(changelog)
-        else:
-            print(changelog)
+        print_markdown(changelog, colors=self.options.cli)
 
 
 class ChangesCommand(Command):
     """Show changes between versions."""
 
     name = "changes"
-    aliases = [
-        "c",
-    ]
+    aliases = ("c",)
 
     @staticmethod
-    def add_arguments(parser):
+    def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
             "--header",
             action="store",
@@ -758,6 +777,7 @@ class ChangesCommand(Command):
             nargs="+",
             type=str,
             default=["fix", "feat"],
+            choices=[*TYPES.keys(), "all"],
         )
 
     def execute(self):
@@ -782,13 +802,7 @@ class ChangesCommand(Command):
             output=output,
         )
         output.seek(0)
-        if self.options.cli:
-            import consolemd
-
-            renderer = consolemd.Renderer(style_name="native")
-            renderer.render(output.read())
-        else:
-            print(output.read())
+        print_markdown(output.read(), colors=self.options.cli)
 
 
 class AliasedSubParsersAction(argparse._SubParsersAction):
@@ -873,7 +887,3 @@ def main():
         command.execute()
     else:
         parser.print_help(sys.stderr)
-
-
-if __name__ == "__main__":
-    main()

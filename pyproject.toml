@@ -24,7 +24,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["gitpython","semver", "consolemd"]
+dependencies = ["gitpython","semver"]
+
+[project.optional-dependencies]
+colors = ["rich"]
 
 [project.urls]
 Documentation = "https://github.com/unknown/mkchangelog#readme"
