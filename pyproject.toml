@@ -32,9 +32,9 @@ dependencies = ["gitpython","semver"]
 colors = ["rich"]
 
 [project.urls]
-Documentation = "https://github.com/unknown/mkchangelog#readme"
-Issues = "https://github.com/unknown/mkchangelog/issues"
-Source = "https://github.com/unknown/mkchangelog"
+Documentation = "https://github.com/onjin/mkchangelog#readme"
+Issues = "https://github.com/onjin/mkchangelog/issues"
+Source = "https://github.com/onjin/mkchangelog"
 
 [project.scripts]
 mkchangelog = "mkchangelog:main"
