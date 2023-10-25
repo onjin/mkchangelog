@@ -70,7 +70,7 @@ dependencies = [
   "ruff>=0.0.243",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:mkchangelog tests}"
+typing = "mypy --install-types --non-interactive --no-implicit-reexport {args:mkchangelog tests}"
 style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
@@ -116,7 +116,7 @@ select = [
   "S",
   "T",
   "TID",
-  "UP",
+  #"UP",
   "W",
   "YTT",
 ]
@@ -132,7 +132,7 @@ ignore = [
 ]
 unfixable = [
   # Don't touch unused imports
-  "F401",
+  #"F401",
 ]
 
 [tool.ruff.isort]

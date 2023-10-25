@@ -1,6 +1,6 @@
 import textwrap
 
-from mkchangelog import BC_REGEXP, CC_REGEXP, REF_REGEXP, LogLine, get_next_version, get_references_from_msg
+from mkchangelog.parser import BC_REGEXP, CC_REGEXP, REF_REGEXP, LogLine, get_next_version, get_references_from_msg
 
 
 def test_commit_subject_regexp():
@@ -11,13 +11,13 @@ def test_commit_subject_regexp():
     result = CC_REGEXP.match(summary)
 
     # Then - commit is parsed properly
-    assert result.groups()[0] == None, result.groups()  # revert status
+    assert result.groups()[0] is None, result.groups()  # revert status
     assert result.groups()[1] == "feat", result.groups()  # type
     assert result.groups()[2] == "(admin)", result.groups()  # scope
     assert result.groups()[3] == "super feature landed", result.groups()  # title
 
     # And - named groups also works
-    assert result.groupdict()["revert"] == None, result.groupdict()  # revert status
+    assert result.groupdict()["revert"] is None, result.groupdict()  # revert status
     assert result.groupdict()["type"] == "feat", result.groupdict()  # type
     assert result.groupdict()["scope"] == "(admin)", result.groupdict()  # scope
     assert result.groupdict()["title"] == "super feature landed", result.groupdict()  # title

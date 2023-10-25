@@ -3,11 +3,12 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/mkchangelog.svg)](https://pypi.org/project/mkchangelog)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mkchangelog.svg)](https://pypi.org/project/mkchangelog)
 
------
+---
 
 Use this CLI tool to create a changelog for a project from the git log using the `conventional commits` scheme.
 
 Features:
+
 - show the last changes as markdown
 - generate full CHANGELOG.md file
 - compute and bump next versions (using `semver`)
@@ -34,6 +35,14 @@ mkchangelog changes - show  changelog for last changes, using default `fix` and 
 mkchangelog changes -t all - show  changelog for last changes, using all types
 mkchangelog generate -t all - generate full changelog for current and all previous versions (signed tags) on the screen
 mkchangelog bump - interactive tool; compute next versions from `feat`, `fix` and `breaking_changes`, optionaly write `CHANGELOG.md`, commit and tag next version
+```
+
+## Contributing
+
+### Run tests
+
+```console
+hatch run all:test
 ```
 
 ## License
