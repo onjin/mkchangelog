@@ -7,17 +7,15 @@ import logging
 import os
 import re
 import sys
-import time
 from abc import abstractmethod
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from distutils.util import strtobool
 from functools import partial
 from io import StringIO
 from itertools import groupby, tee
 from operator import attrgetter
-from typing import Dict, Iterator, List, NoReturn, Set, Tuple
+from typing import Dict, Iterator, List, NoReturn, Optional, Set, Tuple
 
 import semver
 from git import Commit, Repo
@@ -34,6 +32,21 @@ TZ_INFO = datetime.now().astimezone().tzinfo
 
 logger = logging.getLogger(__file__)
 env = os.getenv
+
+
+def strtobool(val: str) -> bool:
+    """Convert a string representation of truth to true (1) or false (0).
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    """
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
 
 
 def print_markdown(markdown: str, *, colors: bool = False):
@@ -111,7 +124,7 @@ ORDERING = {
 }
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(frozen=True)
 class LogLine:
     subject: str
     message: str
@@ -123,20 +136,20 @@ class LogLine:
     breaking_change: List[str]
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(frozen=True)
 class MatchedLine:
     log: str
     groups: str
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(frozen=True)
 class Version:
     name: str
     date: datetime
     semver: str
 
 
-def yes_or_no(question: str, default: str | None = "no") -> bool:
+def yes_or_no(question: str, default: Optional[str] = "no") -> bool:
     """Ask question and wait for yes or no decision.
 
     Args:
@@ -259,7 +272,7 @@ def get_git_versions(tag_prefix: str) -> List[semver.Version]:
     return sorted(versions, key=lambda v: v.date, reverse=True)
 
 
-def get_last_version(tag_prefix: str) -> Version | None:
+def get_last_version(tag_prefix: str) -> Optional[Version]:
     """Return last bumped bersion
 
     Args:
@@ -274,7 +287,7 @@ def get_last_version(tag_prefix: str) -> Version | None:
     return versions[0]
 
 
-def get_next_version(tag_prefix: str, current_version: str, commits: List[LogLine]) -> Version | None:
+def get_next_version(tag_prefix: str, current_version: str, commits: List[LogLine]) -> Optional[Version]:
     """Return next version or None if not available
 
     Args:
@@ -313,7 +326,7 @@ def get_next_version(tag_prefix: str, current_version: str, commits: List[LogLin
     return Version(name=name, date=datetime.now(tz=TZ_INFO), semver=next_version)
 
 
-def get_git_log(max_count: int = 1000, rev: str | None = None, types: List[str] | None = None):
+def get_git_log(max_count: int = 1000, rev: Optional[str] = None, types: Optional[List[str]] = None):
     """Return git log parsed using Conventional Commit format.
 
     Args:
