@@ -256,7 +256,7 @@ def get_git_versions(tag_prefix: str) -> List[semver.Version]:
         for tag in repo.tags
         if tag.name.startswith(tag_prefix)
     ]
-    return sorted(versions, key=lambda v: v[1], reverse=True)
+    return sorted(versions, key=lambda v: v.date, reverse=True)
 
 
 def get_last_version(tag_prefix: str) -> Version | None:
