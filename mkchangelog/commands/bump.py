@@ -5,7 +5,8 @@ import sys
 from datetime import datetime
 from io import StringIO
 
-from git.repo import Repo
+import semver
+from git import Repo
 
 from mkchangelog.base import (
     DATE_FORMAT,
@@ -21,7 +22,7 @@ from mkchangelog.output import (
     print_markdown,
     print_orange,
 )
-from mkchangelog.parser import TYPES, get_git_log, get_last_version, get_next_version
+from mkchangelog.parser import TYPES, Version, get_git_log, get_last_version, get_next_version
 
 
 def create_tag(name: str, message: str):
@@ -72,6 +73,12 @@ class BumpCommand(Command):
             default="v",
         )
         parser.add_argument(
+            "-s",
+            "--set-version",
+            action="store",
+            help="force version instead of detecting",
+        )
+        parser.add_argument(
             "-t",
             "--types",
             action="store",
@@ -100,11 +107,18 @@ class BumpCommand(Command):
             types=self.options.types,
         )
 
-        next_version = get_next_version(
-            tag_prefix=self.options.prefix,
-            current_version=version_name,
-            commits=commits,
-        )
+        if self.options.set_version:
+            next_version = Version(
+                name=f"{self.options.prefix}{self.options.set_version}",
+                date=datetime.now(tz=TZ_INFO),
+                semver=semver.parse(self.options.set_version),
+            )
+        else:
+            next_version = get_next_version(
+                tag_prefix=self.options.prefix,
+                current_version=version_name,
+                commits=commits,
+            )
 
         if next_version:
             print_green(f"Next version:    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})")
