@@ -64,4 +64,4 @@ def main(argv: Optional[Sequence[str]] = None):
         add_stdout_handler(logger, int(args.verbosity))
         args.command(args)
     else:
-        parser.print_help(sys.stderr)
+        parser.print_help()

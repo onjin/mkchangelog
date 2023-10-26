@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 
 from mkchangelog.commands import Command
+from mkchangelog.models import TYPES
 from mkchangelog.output import get_markdown_changelog, print_markdown
-from mkchangelog.parser import TYPES
 
 
 class GenerateCommand(Command):

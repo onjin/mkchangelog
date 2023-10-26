@@ -3,22 +3,17 @@ from __future__ import annotations
 import logging
 import sys
 from datetime import datetime
-from functools import partial
 from io import StringIO
 from itertools import tee
 from typing import List, Optional
 
-from mkchangelog.base import (
+from mkchangelog.core import (
     DATE_FORMAT,
     TZ_INFO,
-)
-from mkchangelog.parser import (
-    TYPES,
-    Version,
-    get_git_log,
-    get_git_versions,
     group_commits_by_type,
 )
+from mkchangelog.models import TYPES, Version
+from mkchangelog.parser import GitLogParser
 
 try:
     import rich
@@ -27,6 +22,8 @@ try:
 except ImportError:
     rich = None
     use_colors = False
+
+logger = logging.getLogger()
 
 
 def print_markdown(markdown: str, *, colors: bool = False):
@@ -39,22 +36,6 @@ def print_markdown(markdown: str, *, colors: bool = False):
         console.print(md)
     else:
         sys.stdout.write(markdown)
-
-
-def print_color(color: str, text: str):
-    if use_colors:
-        from rich.console import Console
-
-        Console().print(f"[{color}]{text}[/{color}]")
-    else:
-        sys.stdout.write(text)
-
-
-print_blue = partial(print_color, "blue")
-print_green = partial(print_color, "green")
-print_orange = partial(print_color, "orange")
-
-logger = logging.getLogger()
 
 
 def get_markdown_version(
@@ -80,19 +61,18 @@ def get_markdown_version(
         rev = f"{from_version}"
 
     logger.debug(f"getting log for rev {rev} with types {commit_types}")
-    lines = list(get_git_log(max_count=max_count, rev=rev, types=commit_types))
+    lines = list(GitLogParser().get_log(max_count=max_count, rev=rev, types=commit_types))
     if lines:
-        # separate reverts, breaking changes {{{
+        # separate reverts, breaking changes
         commits, reverts, breaking_changes = tee(lines, 3)
 
         commits = filter(lambda line: line.revert is False, commits)
         reverts = list(filter(lambda line: line.revert is True, reverts))
         breaking_changes = list(filter(lambda line: line.breaking_change, breaking_changes))
-        # separate reverts, breaking changes }}}
 
-        # group commits by type {{{
+        # group commits by type
         groups = group_commits_by_type(commits)
-        # group commits by type }}}
+
         for group_name, rows in groups:
             output.write(f"### {TYPES.get(group_name, group_name.capitalize())}\n")
             output.write("\n")
@@ -146,13 +126,13 @@ def get_markdown_changelog(
     output = StringIO()
 
     output.write(f"# {header}\n\n")
-    versions = get_git_versions(tag_prefix=tag_prefix)
+    versions = GitLogParser().get_versions(tag_prefix=tag_prefix)
     logger.debug(f"got versions: {versions}")
 
     if not versions:
         return output.read()
 
-    # get unreleased changes {{{
+    # get unreleased changes
     from_version = Version(
         name="HEAD",
         date=datetime.now(tz=TZ_INFO),
@@ -170,7 +150,6 @@ def get_markdown_changelog(
         max_count=max_count,
         output=output,
     )
-    # get unreleased changes }}}
 
     from_version = to_version
     for to_version in versions:

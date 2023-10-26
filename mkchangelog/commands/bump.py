@@ -8,21 +8,25 @@ from io import StringIO
 import semver
 from git import Repo
 
-from mkchangelog.base import (
+from mkchangelog.commands import Command
+from mkchangelog.core import (
     DATE_FORMAT,
     TZ_INFO,
-    yes_or_no,
+    get_next_version,
 )
-from mkchangelog.commands import Command
+from mkchangelog.models import TYPES, Version
 from mkchangelog.output import (
     get_markdown_changelog,
     get_markdown_version,
+    print_markdown,
+)
+from mkchangelog.parser import GitLogParser
+from mkchangelog.utils import (
     print_blue,
     print_green,
-    print_markdown,
     print_orange,
+    yes_or_no,
 )
-from mkchangelog.parser import TYPES, Version, get_git_log, get_last_version, get_next_version
 
 
 def create_tag(name: str, message: str):
@@ -79,6 +83,11 @@ class BumpCommand(Command):
             help="force version instead of detecting",
         )
         parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="just show versions",
+        )
+        parser.add_argument(
             "-t",
             "--types",
             action="store",
@@ -91,7 +100,7 @@ class BumpCommand(Command):
 
     @classmethod
     def execute(cls, args: argparse.Namespace):
-        version = get_last_version(tag_prefix=args.prefix)
+        version = GitLogParser().get_last_version(tag_prefix=args.prefix)
         if version:
             version_name = version.name
             version_date = version.date.strftime(DATE_FORMAT)
@@ -102,7 +111,7 @@ class BumpCommand(Command):
             rev = "HEAD"
 
         print_blue(f"Current version: {version_name} ({version_date})")
-        commits = get_git_log(
+        commits = GitLogParser().get_log(
             max_count=args.max_count,
             rev=rev,
             types=args.types,
@@ -127,6 +136,8 @@ class BumpCommand(Command):
             sys.stdout.write("--> No next version available")
             return
 
+        if args.dry_run:
+            return
         if yes_or_no(
             "--> Show next version changelog?",
             default="no",
@@ -149,7 +160,7 @@ class BumpCommand(Command):
             print_orange("Exiting")
             return
 
-        # generate changelog for current version {{{
+        # generate changelog for current version
         print_green(f"Generating:      {args.output}")
         with open(args.output, "w") as output:
             output.write(
@@ -168,13 +179,11 @@ class BumpCommand(Command):
             files=[args.output],
             message=f"chore(changelog): write {args.output} for version {next_version.name}",
         )
-        # generate changelog for current version }}}
 
-        # tag version {{{
+        # tag version
         print_green(f"Creating tag:    {next_version.name}")
         # create tag with "chore(version): new version v1.1.1"
         create_tag(
             name=next_version.name,
             message=f"chore(version): bump version {next_version.name}",
         )
-        # tag version }}}

@@ -2,8 +2,8 @@ import argparse
 from io import StringIO
 
 from mkchangelog.commands import Command
+from mkchangelog.models import TYPES
 from mkchangelog.output import get_markdown_version, print_markdown
-from mkchangelog.parser import TYPES
 
 
 class ChangesCommand(Command):
