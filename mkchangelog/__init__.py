@@ -8,13 +8,9 @@ import os
 import sys
 from typing import Optional, Sequence
 
-from mkchangelog.commands import COMMANDS, get_command_class
 from mkchangelog.commands.bump import BumpCommand
 from mkchangelog.commands.changes import ChangesCommand
 from mkchangelog.commands.generate import GenerateCommand
-
-__all__ = ["BumpCommand", "ChangesCommand", "GenerateCommand", "main"]
-
 
 logger = logging.getLogger(__file__)
 env = os.getenv
@@ -59,18 +55,13 @@ def main(argv: Optional[Sequence[str]] = None):
 
     subparsers = parser.add_subparsers(title="command", dest="command")
 
-    for cmd in COMMANDS.values():
-        subparser = subparsers.add_parser(name=cmd.name, help=cmd.__doc__, aliases=cmd.aliases)
-        cmd.add_arguments(subparser)
+    ChangesCommand.register(subparsers)
+    GenerateCommand.register(subparsers)
+    BumpCommand.register(subparsers)
 
-    options = parser.parse_args(argv)
-
-    add_stdout_handler(logger, int(options.verbosity))
-
-    # find command using name or alias and create instance with passed arg options
-    command_class = get_command_class(options.command)
-    if command_class:
-        command = command_class(options)
-        command.execute()
+    args = parser.parse_args(argv)
+    if args.command:
+        add_stdout_handler(logger, int(args.verbosity))
+        args.command(args)
     else:
         parser.print_help(sys.stderr)

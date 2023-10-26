@@ -30,6 +30,7 @@ dependencies = ["gitpython","semver"]
 
 [project.optional-dependencies]
 colors = ["rich"]
+dev = ["pytest-stub"]
 
 [project.urls]
 Documentation = "https://github.com/onjin/mkchangelog#readme"
@@ -67,7 +68,8 @@ detached = true
 dependencies = [
   "black>=23.1.0",
   "mypy>=1.0.0",
-  "ruff>=0.0.243",
+  "ruff>=0.1.0",
+  "pytest-stub",
 ]
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive --no-implicit-reexport {args:mkchangelog tests}"

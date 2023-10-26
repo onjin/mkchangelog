@@ -13,8 +13,8 @@ class GenerateCommand(Command):
     name = "generate"
     aliases = ("g", "gen")
 
-    @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser):
+    @classmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "-c",
             "--cli",
@@ -59,12 +59,13 @@ class GenerateCommand(Command):
             choices=[*TYPES.keys(), "all"],
         )
 
-    def execute(self):
+    @classmethod
+    def execute(cls, args: argparse.Namespace):
         changelog = get_markdown_changelog(
-            header=self.options.header,
-            tag_prefix=self.options.prefix,
-            commit_types=self.options.types,
-            max_count=self.options.max_count,
-            head_name=self.options.head_name,
+            header=args.header,
+            tag_prefix=args.prefix,
+            commit_types=args.types,
+            max_count=args.max_count,
+            head_name=args.head_name,
         )
-        print_markdown(changelog, colors=self.options.cli)
+        print_markdown(changelog, colors=args.cli)

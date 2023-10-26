@@ -43,8 +43,8 @@ class BumpCommand(Command):
     name = "bump"
     aliases = ("b",)
 
-    @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser):
+    @classmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "--header",
             action="store",
@@ -89,33 +89,34 @@ class BumpCommand(Command):
             choices=[*TYPES.keys(), "all"],
         )
 
-    def execute(self):
-        version = get_last_version(tag_prefix=self.options.prefix)
+    @classmethod
+    def execute(cls, args: argparse.Namespace):
+        version = get_last_version(tag_prefix=args.prefix)
         if version:
             version_name = version.name
             version_date = version.date.strftime(DATE_FORMAT)
-            rev = (f"HEAD...{version_name}",)
+            rev = f"HEAD...{version_name}"
         else:
-            version_name = f"{self.options.prefix}0.0.0"
+            version_name = f"{args.prefix}0.0.0"
             version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
             rev = "HEAD"
 
         print_blue(f"Current version: {version_name} ({version_date})")
         commits = get_git_log(
-            max_count=self.options.max_count,
+            max_count=args.max_count,
             rev=rev,
-            types=self.options.types,
+            types=args.types,
         )
 
-        if self.options.set_version:
+        if args.set_version:
             next_version = Version(
-                name=f"{self.options.prefix}{self.options.set_version}",
+                name=f"{args.prefix}{args.set_version}",
                 date=datetime.now(tz=TZ_INFO),
-                semver=semver.parse(self.options.set_version),
+                semver=semver.parse(args.set_version),
             )
         else:
             next_version = get_next_version(
-                tag_prefix=self.options.prefix,
+                tag_prefix=args.prefix,
                 current_version=version_name,
                 commits=commits,
             )
@@ -134,38 +135,38 @@ class BumpCommand(Command):
             get_markdown_version(
                 from_version="HEAD",
                 to_version=version_name,
-                commit_types=self.options.types,
-                max_count=self.options.max_count,
+                commit_types=args.types,
+                max_count=args.max_count,
                 output=output,
             )
             output.seek(0)
             print_markdown(output.read(), colors=True)
 
         if not yes_or_no(
-            f"--> Generate {self.options.output} and tag version?",
+            f"--> Generate {args.output} and tag version?",
             default="no",
         ):
             print_orange("Exiting")
             return
 
         # generate changelog for current version {{{
-        print_green(f"Generating:      {self.options.output}")
-        with open(self.options.output, "w") as output:
+        print_green(f"Generating:      {args.output}")
+        with open(args.output, "w") as output:
             output.write(
                 get_markdown_changelog(
-                    header=self.options.header,
-                    tag_prefix=self.options.prefix,
-                    commit_types=self.options.types,
-                    max_count=self.options.max_count,
+                    header=args.header,
+                    tag_prefix=args.prefix,
+                    commit_types=args.types,
+                    max_count=args.max_count,
                     head_name=next_version.name,
                 )
             )
 
-        print_green(f"Commiting:       {self.options.output}")
+        print_green(f"Commiting:       {args.output}")
         # commit CHANGELOG.md
         git_commit(
-            files=[self.options.output],
-            message=f"chore(changelog): write {self.options.output} for version {next_version.name}",
+            files=[args.output],
+            message=f"chore(changelog): write {args.output} for version {next_version.name}",
         )
         # generate changelog for current version }}}
 

@@ -5,7 +5,7 @@
 
 ---
 
-Use this CLI tool to create a changelog for a project from the git log using the `conventional commits` scheme.
+Use this CLI tool to create a changelog for a project from the git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
 
 Features:
 
@@ -19,13 +19,14 @@ Features:
 **Table of Contents**
 
 - [Installation](#installation)
-- [Uusage](#usage)
+- [Usage](#usage)
 - [License](#license)
 
 ## Installation
 
 ```console
 pip install mkchangelog
+pip install mkchangelog[colors]  # for console colorized output
 ```
 
 ## Usage
@@ -39,10 +40,22 @@ mkchangelog bump - interactive tool; compute next versions from `feat`, `fix` an
 
 ## Contributing
 
+Install `pre-commit`
+
+```python
+pip install pre-commit
+pre-commit install
+```
+
 ### Run tests
 
 ```console
 hatch run all:test
+```
+
+### Linting
+```console
+hatch run lint:all
 ```
 
 ## License

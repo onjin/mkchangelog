@@ -12,8 +12,8 @@ class ChangesCommand(Command):
     name = "changes"
     aliases = ("c",)
 
-    @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser):
+    @classmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "--header",
             action="store",
@@ -57,26 +57,27 @@ class ChangesCommand(Command):
             choices=[*TYPES.keys(), "all"],
         )
 
-    def execute(self):
+    @classmethod
+    def execute(cls, args: argparse.Namespace):
         output = StringIO()
-        output.write(f"# {self.options.header}\n")
+        output.write(f"# {args.header}\n")
         output.write("\n")
 
         output.write(
             "## {from_version} {to_version}\n".format(
-                from_version=self.options.rev_from,
-                to_version=self.options.rev_to or "",
+                from_version=args.rev_from,
+                to_version=args.rev_to or "",
             )
         )
         output.write("\n")
 
-        # header=self.options.header,
+        # header=args.header,
         get_markdown_version(
-            from_version=self.options.rev_from,
-            to_version=self.options.rev_to,
-            commit_types=self.options.types,
-            max_count=self.options.max_count,
+            from_version=args.rev_from,
+            to_version=args.rev_to,
+            commit_types=args.types,
+            max_count=args.max_count,
             output=output,
         )
         output.seek(0)
-        print_markdown(output.read(), colors=self.options.cli)
+        print_markdown(output.read(), colors=args.cli)

@@ -1,61 +1,34 @@
 from __future__ import annotations
 
+import abc
 import argparse
-from abc import abstractmethod
-from typing import Any, Dict, Optional
-
-COMMANDS: Dict[str, Command] = {}
-ALIASES: Dict[str, Command] = {}
 
 
-def register_command(target_class: Command):
-    """Register command for it's name and aliases
-
-    Args:
-        target_class (Command): command to register
-    """
-    COMMANDS[target_class.name] = target_class
-    ALIASES[target_class.name] = target_class
-    for alias in target_class.aliases:
-        ALIASES[alias] = target_class
-
-
-class MetaRegistry(type):
-    """Meta class for Command subclasses to auto register them."""
-
-    def __new__(cls, name: str, bases: tuple[type, ...], class_dict: dict[str, Any]):
-        new_cls = type.__new__(cls, name, bases, class_dict)
-        if name != "Command" and name not in COMMANDS:
-            register_command(new_cls)
-        return new_cls
-
-
-class Command(metaclass=MetaRegistry):
+class Command:
     """Base Command class."""
 
-    name: str = "base"
-    aliases: tuple[str]
+    name: str
+    aliases: tuple[str, ...]
 
-    def __init__(self, options: argparse.Namespace):
-        self.options = options
-        self.aliases = ()
+    @classmethod
+    def register(cls, subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
+        """Register Command to subparsers
 
-    @staticmethod
-    @abstractmethod
-    def add_arguments(parser: argparse.ArgumentParser) -> None:
+        Creates the subparser for command options and sets `command=cls.execute` as default
+        executor.
+        """
+
+        subparser = subparsers.add_parser(name=cls.name, help=cls.__doc__, aliases=cls.aliases)
+        cls.add_arguments(subparser)
+        subparser.set_defaults(command=cls.execute)
+        return subparser
+
+    @classmethod
+    @abc.abstractmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
         raise NotImplementedError
 
-    def execute(self) -> None:
+    @classmethod
+    @abc.abstractmethod
+    def execute(cls, args: argparse.Namespace) -> None:
         raise NotImplementedError
-
-
-def get_command_class(cmd: str) -> Optional[Command]:
-    """Return command class for given input
-
-    Args:
-        cmd (str): input command line
-
-    Returns:
-        Command - matching command
-    """
-    return ALIASES.get(cmd)

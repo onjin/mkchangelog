@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, tzinfo
 from typing import Optional
 
-TZ_INFO: tzinfo = datetime.now().astimezone().tzinfo
+TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
 DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
 
@@ -16,9 +16,9 @@ def strtobool(val: str) -> bool:
     """
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
-        return 1
+        return True
     elif val in ("n", "no", "f", "false", "off", "0"):
-        return 0
+        return False
     else:
         msg = f"invalid truth value {val!r}"
         raise ValueError(msg)
