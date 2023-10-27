@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import ClassVar, Dict, Generator, Optional
 
 from mkchangelog.core import ChangelogGenerator, get_next_version
-from mkchangelog.models import ChangelogSection, CommitType, LogLine, Version
+from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 
 
 class MockLogParser:
@@ -10,10 +12,10 @@ class MockLogParser:
         self._log = log or []
         self._versions = versions or []
 
-    def get_versions(self, tag_prefix: str, limit: Optional[int] = None) -> list[Version]:  # noqa: ARG002
+    def get_versions(self, limit: Optional[int] = None) -> list[Version]:  # noqa: ARG002
         return self._versions
 
-    def get_last_version(self, tag_prefix: str) -> Optional[Version]:  # noqa: ARG002
+    def get_last_version(self) -> Optional[Version]:
         return self._versions[0] if self._versions else None
 
     def get_log(
@@ -56,6 +58,13 @@ def pytest_generate_tests(metafunc):
 
 
 class TestChangelogGenerator(object):
+    @dataclass
+    class ParamsForChangelog(object):
+        input_log: list[LogLine]
+        input_versions: list[Version]
+        output_versions: list[str]
+        output_changes: Dict[str, Dict[CommitType, list[LogLine]]]
+
     @dataclass
     class ParamsForChangelogSection(object):
         input_log: list[LogLine]
@@ -140,7 +149,14 @@ class TestChangelogGenerator(object):
                     },
                 )
             },
-        ]
+        ],
+        "test_get_changelog": [
+            {
+                "parameters": ParamsForChangelog(
+                    input_log=[], input_versions=[], output_versions=["HEAD"], output_changes={"HEAD": {}}
+                )
+            },
+        ],
     }
 
     def test_get_changelog_section(self, parameters: ParamsForChangelogSection):
@@ -148,5 +164,17 @@ class TestChangelogGenerator(object):
             parser=MockLogParser(log=parameters.input_log, versions=parameters.input_versions)
         ).get_changelog_section()
         assert isinstance(section, ChangelogSection)
-        assert section.version == parameters.output_version
+        assert section.version.name == parameters.output_version
         assert section.changes == parameters.output_changes
+
+    def test_get_changelog(self, parameters: ParamsForChangelog):
+        changelog = ChangelogGenerator(
+            parser=MockLogParser(log=parameters.input_log, versions=parameters.input_versions)
+        ).get_changelog()
+        assert isinstance(changelog, Changelog)
+        sections = (sec for sec in changelog.sections)
+        for version_name in parameters.output_versions:
+            section = next(sections)
+            assert section.version is not None
+            assert section.version.name == version_name
+            assert section.changes == parameters.output_changes[version_name]

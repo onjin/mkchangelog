@@ -126,7 +126,7 @@ def get_markdown_changelog(
     output = StringIO()
 
     output.write(f"# {header}\n\n")
-    versions = GitLogParser().get_versions(tag_prefix=tag_prefix)
+    versions = GitLogParser(tag_prefix=tag_prefix).get_versions()
     logger.debug(f"got versions: {versions}")
 
     if not versions:

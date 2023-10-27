@@ -100,7 +100,7 @@ class BumpCommand(Command):
 
     @classmethod
     def execute(cls, args: argparse.Namespace):
-        version = GitLogParser().get_last_version(tag_prefix=args.prefix)
+        version = GitLogParser(tag_prefix=args.prefix).get_last_version()
         if version:
             version_name = version.name
             version_date = version.date.strftime(DATE_FORMAT)
@@ -125,7 +125,6 @@ class BumpCommand(Command):
             )
         else:
             next_version = get_next_version(
-                tag_prefix=args.prefix,
                 current_version=version_name,
                 commits=commits,
             )

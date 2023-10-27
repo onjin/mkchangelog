@@ -30,6 +30,7 @@ class LogParser(abc.ABC):
 
 
 class GitLogParser(LogParser):
+    TAG_PREFIX = "v"
     REF_REGEXP = re.compile(
         r"^\s+?(?P<action>{actions})\s+(?P<refs>.*)$".format(actions="|".join(REFERENCE_ACTIONS)),
         re.MULTILINE,
@@ -49,11 +50,14 @@ class GitLogParser(LogParser):
         re.MULTILINE,
     )
 
-    def get_versions(self, tag_prefix: str, limit: Optional[int] = None) -> list[Version]:
+    def __init__(self, tag_prefix: str = TAG_PREFIX):
+        self._tag_prefix = tag_prefix
+
+    def get_versions(self, limit: Optional[int] = None) -> list[Version]:
         """Return versions lists
 
         Args:
-            tag_prefix (str): versions tags prefix
+            limit (int) - limit versions returned
 
         Returns:
             list(Version(name, date))
@@ -63,26 +67,23 @@ class GitLogParser(LogParser):
             Version(
                 name=tag.name,
                 date=tag.commit.authored_datetime,
-                semver=create_version(tag_prefix, tag.name),
+                semver=create_version(self._tag_prefix, tag.name),
             )
             for tag in repo.tags
-            if tag.name.startswith(tag_prefix)
+            if tag.name.startswith(self._tag_prefix)
         ]
         sorted_versions = sorted(versions, key=lambda v: v.date, reverse=True)
         if limit:
             return sorted_versions[:limit]
         return sorted_versions
 
-    def get_last_version(self, tag_prefix: str) -> Optional[Version]:
+    def get_last_version(self) -> Optional[Version]:
         """Return last bumped version
-
-        Args:
-            tag_prefix (str): version tags prefix
 
         Returns:
             Version(name, date)
         """
-        versions = self.get_versions(tag_prefix=tag_prefix, limit=1)
+        versions = self.get_versions(limit=1)
         if versions:
             return versions[0]
         return None
