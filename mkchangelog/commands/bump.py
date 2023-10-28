@@ -121,7 +121,7 @@ class BumpCommand(Command):
             next_version = Version(
                 name=f"{args.prefix}{args.set_version}",
                 date=datetime.now(tz=TZ_INFO),
-                semver=semver.parse(args.set_version),
+                semver=semver.Version.parse(args.set_version),
             )
         else:
             next_version = get_next_version(
