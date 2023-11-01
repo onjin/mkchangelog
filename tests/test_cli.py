@@ -6,7 +6,7 @@ from mkchangelog import main
 def test_cli_changes(capsys: pytest.CaptureFixture[str]):
     main(["changes"])
     captured = capsys.readouterr()
-    assert captured.out.startswith("# Changes")
+    assert captured.out.startswith("## HEAD")
 
 
 def test_cli_generate(capsys: pytest.CaptureFixture[str]):

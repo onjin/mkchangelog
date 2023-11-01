@@ -2,18 +2,19 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import datetime, tzinfo
-from itertools import groupby, tee
+from itertools import groupby
 from operator import attrgetter
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 import semver
 
-from mkchangelog.models import TYPES_ORDERING, Changelog, ChangelogSection, CommitType, LogLine, Version
-from mkchangelog.parser import LogParser
+from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
+from mkchangelog.parser import GitMessageParser
+from mkchangelog.providers import LogProvider, VersionsProvider
 from mkchangelog.utils import create_version
 
 if TYPE_CHECKING:
-    from git import Commit
+    pass
 
 TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
 DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
@@ -39,11 +40,11 @@ def get_next_version(tag_prefix: str, current_version: str, commits: list[LogLin
     for commit in commits:
         types[commit.commit_type] += 1
         if commit.breaking_change:
-            types["breaking_change"] += 1
+            types["breaking_changes"] += 1
 
     # bump version
-    breaking_change: int = types.get("breaking_change", 0)
-    if breaking_change > 0:
+    breaking_changes: int = types.get("breaking_changes", 0)
+    if breaking_changes > 0:
         next_version = next_version.bump_major()
     elif "feat" in types.keys():
         next_version = next_version.bump_minor()
@@ -58,16 +59,30 @@ def get_next_version(tag_prefix: str, current_version: str, commits: list[LogLin
     return Version(name=name, date=datetime.now(tz=TZ_INFO), semver=next_version)
 
 
-def group_commits_by_type(commits: Iterator[Commit]):
+def group_commits_by_type(commits: Iterable[LogLine]) -> Dict[str, Iterable[LogLine]]:
     return groupby(
-        sorted(commits, key=lambda x: TYPES_ORDERING.get(x.commit_type, 50)),
+        sorted(commits, key=lambda x: x.commit_type),
         attrgetter("commit_type"),
     )
 
 
 class ChangelogGenerator:
-    def __init__(self, parser: LogParser):
-        self.parser = parser
+    def __init__(
+        self, log_provider: LogProvider, versions_provider: VersionsProvider, message_parser: GitMessageParser
+    ):
+        self.log_provider = log_provider
+        self.versions_provider = versions_provider
+        self.message_parser = message_parser
+
+    def get_loglines(self, commits: list[str], *, strict=False) -> List[LogLine]:
+        lines: list[LogLine] = []
+        for msg in commits:
+            try:
+                lines.append(self.message_parser.parse(msg))
+            except ValueError:
+                if strict:
+                    raise
+        return lines
 
     def get_changelog_section(
         self,
@@ -82,25 +97,28 @@ class ChangelogGenerator:
         rev = from_version.name
         if to_version:
             rev = f"{rev}...{to_version.name}"
-        lines = list(self.parser.get_log(max_count=max_count, rev=rev, types=commit_types))
-        if not lines:
-            return ChangelogSection(version=from_version)
-        commits, reverts, breaking_changes = tee(lines, 3)
-        commits = filter(lambda line: line.revert is False, commits)
-        reverts = list(filter(lambda line: line.revert is True, reverts))
-        breaking_changes = list(filter(lambda line: line.breaking_change, breaking_changes))
+        messages: List[str] = list(self.log_provider.get_log(max_count=max_count, rev=rev))
+        log_lines: List[LogLine] = []
+        log_lines = self.get_loglines(messages)
 
-        valid_types = [ct.name.lower() for ct in CommitType]
+        # filter by commit_types
+        if commit_types:
+            # TODO: support list of internal types, `all` for all internal types and `any` to allow any type
+            log_lines = [line for line in log_lines if line.commit_type in commit_types or "all" in commit_types]
+        reverts = [line for line in log_lines if line.commit_type == "revert"]
+        breaking_changes = [line for line in log_lines if line.breaking_change is True]
+
+        if not log_lines:
+            return ChangelogSection(version=from_version)
 
         section = ChangelogSection(
             version=from_version,
             changes={
-                CommitType(commit_type): sorted(changes, key=lambda i: i.scope if i.scope else "")
-                for commit_type, changes in group_commits_by_type(commits)
-                if commit_type.lower() in valid_types
+                commit_type: sorted(changes, key=lambda i: i.scope if i.scope else "")
+                for commit_type, changes in group_commits_by_type(log_lines)
             },
-            reverts=list(reverts),
-            breaking_changes=(breaking_changes),
+            reverts=reverts,
+            breaking_changes=breaking_changes,
         )
         return section
 
@@ -109,7 +127,7 @@ class ChangelogGenerator:
         commit_types: Optional[list[CommitType]] = None,
     ) -> Changelog:
         head = Version(name="HEAD", date=datetime.now(tz=TZ_INFO), semver=None)
-        versions: list[Version] = [head, *self.parser.get_versions()]
+        versions: list[Version] = [head, *self.versions_provider.get_versions()]
         if len(versions) == 1:
             # just head -> all
             return Changelog(sections=[self.get_changelog_section(from_version=versions[0], commit_types=commit_types)])

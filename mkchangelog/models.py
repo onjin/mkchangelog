@@ -2,74 +2,53 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, NewType, Optional, Set
+
+from git import Commit
 
 if TYPE_CHECKING:
-    from git import Commit
+    pass
 
-
-class CommitType(str, Enum):
-    BUILD = "build"
-    CHORE = "chore"
-    CI = "ci"
-    DEV = "dev"
-    DOCS = "docs"
-    FEAT = "feat"
-    FIX = "fix"
-    PERF = "perf"
-    REFACTOR = "refactor"
-    STYLE = "style"
-    TEST = "text"
-    TRANSLATIONS = "translations"
-
-
-TYPES: Dict[CommitType, str] = {
-    CommitType.BUILD: "Build",
-    CommitType.CHORE: "Chore",
-    CommitType.CI: "CI",
-    CommitType.DEV: "Dev",
-    CommitType.DOCS: "Docs",
-    CommitType.FEAT: "Features",
-    CommitType.FIX: "Fixes",
-    CommitType.PERF: "Performance",
-    CommitType.REFACTOR: "Refactors",
-    CommitType.STYLE: "Style",
-    CommitType.TEST: "Test",
-    CommitType.TRANSLATIONS: "Translations",
-}
-
-# default priority is 10 so we need only
-TYPES_ORDERING: Dict[CommitType, int] = {
-    CommitType.FEAT: 10,
-    CommitType.FIX: 20,
-    CommitType.REFACTOR: 30,
-}
+CommitType = NewType("CommitType", str)
 
 
 @dataclass(frozen=True)
 class LogLine:
+    # whole git message
     message: str
+
+    # first line of commit `message`
+    summary: str
+
+    # parsed commit type, f.e.: feat, fix
     commit_type: str
-    title: str
-    scope: str = ""
-    revert: bool = False
-    references: list[str] = field(default_factory=list)
-    breaking_change: str = ""
-    subject: str = ""
+
+    # optional parsed scope from
+    scope: Optional[str] = None
+
+    # parsed referenced tickets
+    references: Optional[Dict[str, Set[str]]] = None
+
+    # parsed BREAKING CHANGE: paragraph
+    breaking_change: bool = False
+    breaking_changes: Optional[Dict[str, str]] = None
+
+    # TODO: change core code to put original commit here
+    commit: Optional[Commit] = None
 
 
 @dataclass(frozen=True)
 class MatchedLine:
-    log: Commit
+    message: str
+    summary: str
     groups: Dict[str, Any]
 
 
 @dataclass(frozen=True)
 class Version:
     name: str
-    date: datetime
-    semver: str
+    date: Optional[datetime] = None
+    semver: Optional[str] = None
 
 
 @dataclass

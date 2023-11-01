@@ -8,9 +8,11 @@ import os
 import sys
 from typing import Optional, Sequence
 
+from mkchangelog.app import create_application
 from mkchangelog.commands.bump import BumpCommand
 from mkchangelog.commands.changes import ChangesCommand
 from mkchangelog.commands.generate import GenerateCommand
+from mkchangelog.config import get_settings
 
 logger = logging.getLogger(__file__)
 env = os.getenv
@@ -55,13 +57,16 @@ def main(argv: Optional[Sequence[str]] = None):
 
     subparsers = parser.add_subparsers(title="command", dest="command")
 
-    ChangesCommand.register(subparsers)
-    GenerateCommand.register(subparsers)
-    BumpCommand.register(subparsers)
+    settings = get_settings()
+
+    ChangesCommand.register(subparsers, settings)
+    GenerateCommand.register(subparsers, settings)
+    BumpCommand.register(subparsers, settings)
 
     args = parser.parse_args(argv)
     if args.command:
         add_stdout_handler(logger, int(args.verbosity))
-        args.command(args)
+        app = create_application(settings)
+        args.command(args, app)
     else:
         parser.print_help()
