@@ -18,13 +18,6 @@ class GenerateCommand(Command):
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
         parser.add_argument(
-            "-c",
-            "--cli",
-            action="store_true",
-            help="mark output as CLI (colored markdown)",
-            default=False,
-        )
-        parser.add_argument(
             "--head-name",
             action="store",
             help="custom unreleased version name",

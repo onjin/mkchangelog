@@ -25,13 +25,6 @@ class ChangesCommand(Command):
             default="Changes",
         )
         parser.add_argument(
-            "-c",
-            "--cli",
-            action="store_true",
-            help="mark output as CLI (colored markdown)",
-            default=False,
-        )
-        parser.add_argument(
             "-m",
             "--max-count",
             action="store",
