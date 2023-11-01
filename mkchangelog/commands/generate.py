@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
+from mkchangelog.app import Application
 from mkchangelog.commands import Command
-from mkchangelog.output import get_markdown_changelog, print_markdown
-from mkchangelog.parser import TYPES
+from mkchangelog.config import Settings
+from mkchangelog.renderers import RENDERERS
 
 
 class GenerateCommand(Command):
@@ -14,14 +16,7 @@ class GenerateCommand(Command):
     aliases = ("g", "gen")
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
-        parser.add_argument(
-            "-c",
-            "--cli",
-            action="store_true",
-            help="mark output as CLI (colored markdown)",
-            default=False,
-        )
+    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
         parser.add_argument(
             "--head-name",
             action="store",
@@ -52,20 +47,22 @@ class GenerateCommand(Command):
             "-t",
             "--types",
             action="store",
+            dest="commit_types",
             help="limit types",
             nargs="+",
             type=str,
-            default=["fix", "feat"],
-            choices=[*TYPES.keys(), "all"],
+            default=settings.short_commit_types_list,
+            choices=[*settings.commit_types.keys(), "all"],
+        )
+        parser.add_argument(
+            "-r",
+            "--renderer",
+            action="store",
+            help="data renderer",
+            choices=RENDERERS.keys(),
+            default=settings.default_renderer,
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace):
-        changelog = get_markdown_changelog(
-            header=args.header,
-            tag_prefix=args.prefix,
-            commit_types=args.types,
-            max_count=args.max_count,
-            head_name=args.head_name,
-        )
-        print_markdown(changelog, colors=args.cli)
+    def execute(cls, args: argparse.Namespace, app: Application):
+        sys.stdout.write(app.render_changelog(renderer=args.renderer, commit_types=args.commit_types))

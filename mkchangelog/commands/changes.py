@@ -1,9 +1,13 @@
-import argparse
-from io import StringIO
+from __future__ import annotations
 
+import argparse
+import sys
+
+from mkchangelog.app import Application
 from mkchangelog.commands import Command
-from mkchangelog.output import get_markdown_version, print_markdown
-from mkchangelog.parser import TYPES
+from mkchangelog.config import Settings
+from mkchangelog.models import Version
+from mkchangelog.renderers import RENDERERS
 
 
 class ChangesCommand(Command):
@@ -13,19 +17,12 @@ class ChangesCommand(Command):
     aliases = ("c",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
         parser.add_argument(
             "--header",
             action="store",
             help="display header, default 'Changes'",
             default="Changes",
-        )
-        parser.add_argument(
-            "-c",
-            "--cli",
-            action="store_true",
-            help="mark output as CLI (colored markdown)",
-            default=False,
         )
         parser.add_argument(
             "-m",
@@ -50,34 +47,28 @@ class ChangesCommand(Command):
             "-t",
             "--types",
             action="store",
+            dest="commit_types",
             help="limit types",
             nargs="+",
             type=str,
-            default=["fix", "feat"],
-            choices=[*TYPES.keys(), "all"],
+            default=settings.short_commit_types_list,
+            choices=[*settings.commit_types.keys(), "all"],
+        )
+        parser.add_argument(
+            "-r",
+            "--renderer",
+            action="store",
+            help="data renderer",
+            choices=RENDERERS.keys(),
+            default=settings.default_renderer,
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace):
-        output = StringIO()
-        output.write(f"# {args.header}\n")
-        output.write("\n")
-
-        output.write(
-            "## {from_version} {to_version}\n".format(
-                from_version=args.rev_from,
-                to_version=args.rev_to or "",
+    def execute(cls, args: argparse.Namespace, app: Application):
+        version_from = Version(args.rev_from) if args.rev_from else None
+        version_to = Version(args.rev_to) if args.rev_to else None
+        sys.stdout.write(
+            app.render_changelog_section(
+                renderer=args.renderer, from_version=version_from, to_version=version_to, commit_types=args.commit_types
             )
         )
-        output.write("\n")
-
-        # header=args.header,
-        get_markdown_version(
-            from_version=args.rev_from,
-            to_version=args.rev_to,
-            commit_types=args.types,
-            max_count=args.max_count,
-            output=output,
-        )
-        output.seek(0)
-        print_markdown(output.read(), colors=args.cli)

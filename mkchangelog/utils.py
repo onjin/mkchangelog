@@ -1,11 +1,45 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime, tzinfo
+from functools import partial
 from typing import Optional
 
-TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
-DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
+import semver
+
+try:
+    import rich
+
+    use_colors = True
+except ImportError:
+    rich = None
+    use_colors = False
+
+
+def print_color(color: str, text: str):
+    if use_colors:
+        from rich.console import Console
+
+        Console().print(f"[{color}]{text}[/{color}]")
+    else:
+        sys.stdout.write(text)
+
+
+print_blue = partial(print_color, "blue")
+print_green = partial(print_color, "green")
+print_orange = partial(print_color, "orange")
+
+
+def create_version(prefix: str, version: str) -> semver.Version:
+    """Convert version name to semantic version
+
+    Args:
+        prefix (str): version tags prefix
+        version (str): version name to convert
+
+    Returns:
+        semver.Semver - semantic version object
+    """
+    return semver.Version.parse(version[len(prefix) :])
 
 
 def strtobool(val: str) -> bool:

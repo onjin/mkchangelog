@@ -1,70 +1,39 @@
 # Changelog
 
-## v1.1.0 (2023-10-25 23:04:39)
+## HEAD (2023-11-01 22:46:14.087325+01:00)
 
 ### Features
 
-* **bump:** allow to `--set-versions x.y.z` to force next version
-
-### Refactors
-
-* **core:** split code into parser/output/main modules
-
-### Build
-
-* bump version to 1.1.0
-
-
-## v1.0.3 (2023-10-25 11:54:05)
-
-### Chore
-
-* bump version to update broken github links at pypi
-
-### Docs
-
-* add usage info, and fix github links
-
-### Chore
-
-* **build:** fix hatch env matrix
-* **changelog:** write CHANGELOG.md for version v1.0.2
-* **changelog:** write CHANGELOG.md for version v1.0.2
-
-
-## v1.0.2 (2023-10-25 11:37:54)
+* **core:**add `ChangelogGenerator.get_changelog()` method
+* **renderers:**add `json` and `rst` renderers
 
 ### Fixes
 
-* **core:** make project working with python 3.7 and 3.12
-
-### Chore
-
-* bump package version
-* remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md
-* **changelog:** write CHANGELOG.md for version v1.0.2
+* upgrade deprecated sermer.parse
 
 
-## v1.0.1 (2023-10-25 11:11:46)
+## v1.1.0 (2023-10-25 23:04:39+02:00)
+
+### Features
+
+* **bump:**allow to `--set-versions x.y.z` to force next version
+
+
+## v1.0.3 (2023-10-25 11:54:05+02:00)
+
+
+## v1.0.2 (2023-10-25 11:37:54+02:00)
 
 ### Fixes
 
-* **bump:** proper Version sorting
-
-### Chore
-
-* **changelog:** write CHANGELOG.md for version v1.0.1
+* **core:**make project working with python 3.7 and 3.12
 
 
-## v1.0.0 (2023-10-25 11:09:45)
+## v1.0.1 (2023-10-25 11:11:46+02:00)
 
-### Refactors
+### Fixes
 
-* **core:** use optional rich for colorized output
-
-### Build
-
-* bump version to 1.0.0
-* initial commit
+* **bump:**proper Version sorting
 
 
+## v1.0.0 (2023-10-25 11:09:45+02:00)

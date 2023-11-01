@@ -3,26 +3,27 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import datetime
-from io import StringIO
+from typing import Dict
 
 import semver
 from git import Repo
 
-from mkchangelog.base import (
+from mkchangelog.app import Application
+from mkchangelog.commands import Command
+from mkchangelog.config import Settings
+from mkchangelog.core import (
     DATE_FORMAT,
     TZ_INFO,
-    yes_or_no,
+    get_next_version,
 )
-from mkchangelog.commands import Command
-from mkchangelog.output import (
-    get_markdown_changelog,
-    get_markdown_version,
+from mkchangelog.models import Version
+from mkchangelog.renderers import RENDERERS
+from mkchangelog.utils import (
     print_blue,
     print_green,
-    print_markdown,
     print_orange,
+    yes_or_no,
 )
-from mkchangelog.parser import TYPES, Version, get_git_log, get_last_version, get_next_version
 
 
 def create_tag(name: str, message: str):
@@ -44,7 +45,7 @@ class BumpCommand(Command):
     aliases = ("b",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
         parser.add_argument(
             "--header",
             action="store",
@@ -59,18 +60,18 @@ class BumpCommand(Command):
             default=1000,
         )
         parser.add_argument(
-            "-o",
-            "--output",
+            "-of",
+            "--output-file",
             action="store",
-            help="output changelog file; default CHANGELOG.md",
-            default="CHANGELOG.md",
+            help="output changelog file; default CHANGELOG. + renderer extension",
+            default=None,
         )
         parser.add_argument(
             "-p",
             "--prefix",
             action="store",
-            help="version tag prefix; default 'v'",
-            default="v",
+            help=f"version tag prefix; default '{settings.git_tag_prefix}'",
+            default=settings.git_tag_prefix,
         )
         parser.add_argument(
             "-s",
@@ -79,19 +80,33 @@ class BumpCommand(Command):
             help="force version instead of detecting",
         )
         parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="just show versions",
+        )
+        parser.add_argument(
             "-t",
             "--types",
             action="store",
+            dest="commit_types",
             help="limit types",
             nargs="+",
             type=str,
-            default=["all"],
-            choices=[*TYPES.keys(), "all"],
+            default=settings.short_commit_types_list,
+            choices=[*settings.commit_types.keys(), "all"],
+        )
+        parser.add_argument(
+            "-r",
+            "--renderer",
+            action="store",
+            help="data renderer",
+            choices=RENDERERS.keys(),
+            default=settings.default_renderer,
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace):
-        version = get_last_version(tag_prefix=args.prefix)
+    def execute(cls, args: argparse.Namespace, app: Application):
+        version = app.changelog_generator.versions_provider.get_last_version()
         if version:
             version_name = version.name
             version_date = version.date.strftime(DATE_FORMAT)
@@ -102,17 +117,17 @@ class BumpCommand(Command):
             rev = "HEAD"
 
         print_blue(f"Current version: {version_name} ({version_date})")
-        commits = get_git_log(
+        commits = app.changelog_generator.log_provider.get_log(
             max_count=args.max_count,
             rev=rev,
-            types=args.types,
         )
+        commits = app.changelog_generator.get_loglines(commits, strict=False)
 
         if args.set_version:
             next_version = Version(
                 name=f"{args.prefix}{args.set_version}",
                 date=datetime.now(tz=TZ_INFO),
-                semver=semver.parse(args.set_version),
+                semver=semver.Version.parse(args.set_version),
             )
         else:
             next_version = get_next_version(
@@ -127,54 +142,54 @@ class BumpCommand(Command):
             sys.stdout.write("--> No next version available")
             return
 
+        output_file = args.output_file
+        if not output_file:
+            exts: Dict[str, str] = {"markdown": "md", "rst": "rst", "json": "json"}
+            ext = exts[args.renderer]
+            output_file = f"CHANGELOG.{ext}"
+
+        print_green(f"Output file:     {output_file}")
+
+        if args.dry_run:
+            return
+        changelog_str = app.render_changelog(renderer=args.renderer, commit_types=args.commit_types)
         if yes_or_no(
             "--> Show next version changelog?",
             default="no",
         ):
-            output = StringIO()
-            get_markdown_version(
-                from_version="HEAD",
-                to_version=version_name,
-                commit_types=args.types,
-                max_count=args.max_count,
-                output=output,
-            )
-            output.seek(0)
-            print_markdown(output.read(), colors=True)
+            sys.stdout.write(changelog_str)
 
+        ### Generate Changelog File
         if not yes_or_no(
-            f"--> Generate {args.output} and tag version?",
+            f"--> Generate {output_file}?",
             default="no",
         ):
             print_orange("Exiting")
             return
 
-        # generate changelog for current version {{{
-        print_green(f"Generating:      {args.output}")
-        with open(args.output, "w") as output:
-            output.write(
-                get_markdown_changelog(
-                    header=args.header,
-                    tag_prefix=args.prefix,
-                    commit_types=args.types,
-                    max_count=args.max_count,
-                    head_name=next_version.name,
-                )
-            )
+        # generate changelog for current version
+        print_green(f"Generating:      {output_file}")
+        with open(output_file, "w") as fh:
+            fh.write(changelog_str)
 
-        print_green(f"Commiting:       {args.output}")
+        ### Commit & Tag new version
+        if not yes_or_no(
+            f"--> Commit {output_file} and tag next version {next_version.name}?",
+            default="no",
+        ):
+            print_orange("Exiting")
+            return
+        print_green(f"Commiting:       {output_file}")
         # commit CHANGELOG.md
         git_commit(
-            files=[args.output],
-            message=f"chore(changelog): write {args.output} for version {next_version.name}",
+            files=[output_file],
+            message=f"chore(changelog): write {output_file} for version {next_version.name}",
         )
-        # generate changelog for current version }}}
 
-        # tag version {{{
+        # tag version
         print_green(f"Creating tag:    {next_version.name}")
         # create tag with "chore(version): new version v1.1.1"
         create_tag(
             name=next_version.name,
             message=f"chore(version): bump version {next_version.name}",
         )
-        # tag version }}}
