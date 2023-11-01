@@ -52,7 +52,7 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
 }
 
 
-@lru_cache
+@lru_cache(maxsize=128)
 def get_settings():
     conf = copy.deepcopy(DEFAULT_SETTINGS)
     # TODO: override some from .mkchangelog | .config/mkchangelog/config
