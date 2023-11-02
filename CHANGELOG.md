@@ -1,6 +1,11 @@
 # Changelog
 
-## HEAD (2023-11-02 18:50:55.076960+01:00)
+## v1.3.0 (2023-11-02 20:07:35+01:00)
+
+### Features
+
+- **config:** add support for reading config from config file .mkchangelog (#4)
+- **renderers:** add `BREAKING CHANGES:` section to rendered changelog
 
 ### Fixes
 
@@ -9,6 +14,7 @@
 ### Chore
 
 - **changelog:** update CHANGELOG.md for version 1.2.1
+- **release:** bump version to v1.3.0
 
 ## v1.2.1 (2023-11-02 08:57:21+01:00)
 
