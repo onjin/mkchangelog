@@ -8,19 +8,15 @@ from mkchangelog.renderers import TextChangelogRenderer
 
 class TestTextRenderer:
     def test_breaking_changes_presented(self):
+        line = GitMessageParser().parse(
+            "feat(core)!: some important stuff here\n\nBREAKING CHANGE: bad news for compatibility"
+        )
         changelog = Changelog(
             sections=[
                 ChangelogSection(
                     version=Version.from_str(name="v1.0.0", version="1.0.0"),
-                    changes={
-                        "feat": [
-                            GitMessageParser().parse(line)
-                            for line in [
-                                "feat(core)!: some important stuff here\n\nBREAKING CHANGE: bad news for compatibility"
-                            ]
-                        ]
-                    },
-                    breaking_changes=["bad news for compatibility"],
+                    changes={"feat": [line]},
+                    breaking_changes=[line],
                 )
             ]
         )
