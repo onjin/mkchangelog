@@ -1,6 +1,13 @@
 # Changelog
 
-## v1.3.0 (2023-11-02 20:07:35+01:00)
+## HEAD (2023-11-02)
+
+### Refactors
+
+- **commands:** remove `changes` command, now it was mostly duplicating the `generate` command
+- **renderers:** change date forma to iso date
+
+## v1.3.0 (2023-11-02)
 
 ### Features
 
@@ -11,24 +18,14 @@
 
 - **renderers:** rst-output: bold sections are generated wrongly without a space after bold marker
 
-### Chore
-
-- **changelog:** update CHANGELOG.md for version 1.2.1
-- **release:** bump version to v1.3.0
-
-## v1.2.1 (2023-11-02 08:57:21+01:00)
+## v1.2.1 (2023-11-02)
 
 ### Fixes
 
 - **parser:** allow any characters in summary (first line)
 - **renderers:** empty HEAD sections should not be rendered in CHANGELOG
 
-### Chore
-
-- **changelog:** generate CHANGELOG.md for v1.2.0
-- **version:** bump version to 1.2.1
-
-## v1.2.0 (2023-11-01 22:58:25+01:00)
+## v1.2.0 (2023-11-01)
 
 ### Features
 
@@ -45,17 +42,7 @@
 - organize code for `parser` and `renderer` (output)
 - simplify commands
 
-### Chore
-
-- clean up unused `--cli` option
-- **release:** bump version to v1.2.0
-
-### CI
-
-- **github:** install missing `hatch` to run tests
-- **github:** add test workflow
-
-## v1.1.0 (2023-10-25 23:04:39+02:00)
+## v1.1.0 (2023-10-25)
 
 ### Features
 
@@ -65,56 +52,22 @@
 
 - **core:** split code into parser/output/main modules
 
-### Build
+## v1.0.3 (2023-10-25)
 
-- bump version to 1.1.0
-
-### Chore
-
-- **changelog:** write CHANGELOG.md for version v1.1.0
-
-## v1.0.3 (2023-10-25 11:54:05+02:00)
-
-### Chore
-
-- bump version to update broken github links at pypi
-- **build:** fix hatch env matrix
-- **changelog:** write CHANGELOG.md for version v1.0.2
-- **changelog:** write CHANGELOG.md for version v1.0.2
-
-### Docs
-
-- add usage info, and fix github links
-
-## v1.0.2 (2023-10-25 11:37:54+02:00)
+## v1.0.2 (2023-10-25)
 
 ### Fixes
 
 - **core:** make project working with python 3.7 and 3.12
 
-### Chore
-
-- bump package version
-- remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md
-- **changelog:** write CHANGELOG.md for version v1.0.2
-
-## v1.0.1 (2023-10-25 11:11:46+02:00)
+## v1.0.1 (2023-10-25)
 
 ### Fixes
 
 - **bump:** proper Version sorting
 
-### Chore
-
-- **changelog:** write CHANGELOG.md for version v1.0.1
-
-## v1.0.0 (2023-10-25 11:09:45+02:00)
+## v1.0.0 (2023-10-25)
 
 ### Refactors
 
 - **core:** use optional rich for colorized output
-
-### Build
-
-- bump version to 1.0.0
-- initial commit
