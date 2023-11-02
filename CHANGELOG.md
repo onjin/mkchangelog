@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.1 (2023-11-02 08:57:21+01:00)
+
+### Fixes
+
+* **parser:**allow any characters in summary (first line)
+* **renderers:**empty HEAD sections should not be rendered in CHANGELOG
+
+### Chore
+
+* **changelog:**generate CHANGELOG.md for v1.2.0
+* **version:**bump version to 1.2.1
+
 ## v1.2.0 (2023-11-01 22:58:25+01:00)
 
 ### Features
@@ -27,7 +39,6 @@
 * **github:**install missing `hatch` to run tests
 * **github:**add test workflow
 
-
 ## v1.1.0 (2023-10-25 23:04:39+02:00)
 
 ### Features
@@ -46,7 +57,6 @@
 
 * **changelog:**write CHANGELOG.md for version v1.1.0
 
-
 ## v1.0.3 (2023-10-25 11:54:05+02:00)
 
 ### Chore
@@ -60,7 +70,6 @@
 
 * add usage info, and fix github links
 
-
 ## v1.0.2 (2023-10-25 11:37:54+02:00)
 
 ### Fixes
@@ -73,7 +82,6 @@
 * remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md
 * **changelog:**write CHANGELOG.md for version v1.0.2
 
-
 ## v1.0.1 (2023-10-25 11:11:46+02:00)
 
 ### Fixes
@@ -83,7 +91,6 @@
 ### Chore
 
 * **changelog:**write CHANGELOG.md for version v1.0.1
-
 
 ## v1.0.0 (2023-10-25 11:09:45+02:00)
 
