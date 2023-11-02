@@ -68,7 +68,7 @@ class TextChangelogRenderer(ChangelogRenderer):
             return f"> {name}"
 
     def _list_item(self, line: LogLine) -> str:
-        return f"- {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
+        return f"- {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
 
     def _break(self) -> str:
         return ""
@@ -105,7 +105,7 @@ class MarkdownChangelogRenderer(TextChangelogRenderer):
         return f"{'#' * level} {name}"
 
     def _list_item(self, line: LogLine) -> str:
-        return f"* {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
+        return f"- {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
 
 
 class RstChangelogRenderer(TextChangelogRenderer):
@@ -114,7 +114,7 @@ class RstChangelogRenderer(TextChangelogRenderer):
         return "\n".join([name, mark.get(level, "^") * len(name)])
 
     def _list_item(self, line: LogLine) -> str:
-        return f"* {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
+        return f"* {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
 
 
 RENDERERS: Dict[str, Type[ChangelogRenderer]] = {
