@@ -89,6 +89,12 @@ class TextChangelogRenderer(ChangelogRenderer):
         output.append(self._header(f"{section.version.name} ({section.version.date})", level=2))
         output.append(self._break())
 
+        if section.breaking_changes:
+            output.append(self._header("⚠ BREAKING CHANGES", level=3))
+            for line in section.breaking_changes:
+                output.append(self._break())
+                output.append(f"- {line}")
+
         for commit_type in self.ordered_types(section.changes.keys()):
             changes = section.changes[commit_type]
             output.append(self._header(self.settings.commit_types.get(commit_type, commit_type.capitalize), level=3))

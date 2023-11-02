@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import datetime, tzinfo
+from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
@@ -11,12 +11,11 @@ import semver
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
 from mkchangelog.providers import LogProvider, VersionsProvider
-from mkchangelog.utils import create_version
+from mkchangelog.utils import TZ_INFO, create_version
 
 if TYPE_CHECKING:
     pass
 
-TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
 DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 DEFAULT_MAX_GIT_LOG = 1000
 
@@ -102,11 +101,11 @@ class ChangelogGenerator:
         log_lines = self.get_loglines(messages)
 
         # filter by commit_types
+        breaking_changes = [line for line in log_lines if line.breaking_change is True]
         if commit_types:
             # TODO: support list of internal types, `all` for all internal types and `any` to allow any type
             log_lines = [line for line in log_lines if line.commit_type in commit_types or "all" in commit_types]
         reverts = [line for line in log_lines if line.commit_type == "revert"]
-        breaking_changes = [line for line in log_lines if line.breaking_change is True]
 
         if not log_lines:
             return ChangelogSection(version=from_version)

@@ -1,104 +1,114 @@
 # Changelog
 
+## HEAD (2023-11-02 18:50:55.076960+01:00)
+
+### Fixes
+
+- **renderers:** rst-output: bold sections are generated wrongly without a space after bold marker
+
+### Chore
+
+- **changelog:** update CHANGELOG.md for version 1.2.1
+
 ## v1.2.1 (2023-11-02 08:57:21+01:00)
 
 ### Fixes
 
-* **parser:**allow any characters in summary (first line)
-* **renderers:**empty HEAD sections should not be rendered in CHANGELOG
+- **parser:** allow any characters in summary (first line)
+- **renderers:** empty HEAD sections should not be rendered in CHANGELOG
 
 ### Chore
 
-* **changelog:**generate CHANGELOG.md for v1.2.0
-* **version:**bump version to 1.2.1
+- **changelog:** generate CHANGELOG.md for v1.2.0
+- **version:** bump version to 1.2.1
 
 ## v1.2.0 (2023-11-01 22:58:25+01:00)
 
 ### Features
 
-* **core:**add `ChangelogGenerator.get_changelog()` method
-* **renderers:**add `json` and `rst` renderers
+- **core:** add `ChangelogGenerator.get_changelog()` method
+- **renderers:** add `json` and `rst` renderers
 
 ### Fixes
 
-* upgrade deprecated sermer.parse
-* **config:**add `max_size` parameter to `lru_cache` for python `3.7`
+- upgrade deprecated sermer.parse
+- **config:** add `max_size` parameter to `lru_cache` for python `3.7`
 
 ### Refactors
 
-* organize code for `parser` and `renderer` (output)
-* simplify commands
+- organize code for `parser` and `renderer` (output)
+- simplify commands
 
 ### Chore
 
-* clean up unused `--cli` option
-* **release:**bump version to v1.2.0
+- clean up unused `--cli` option
+- **release:** bump version to v1.2.0
 
 ### CI
 
-* **github:**install missing `hatch` to run tests
-* **github:**add test workflow
+- **github:** install missing `hatch` to run tests
+- **github:** add test workflow
 
 ## v1.1.0 (2023-10-25 23:04:39+02:00)
 
 ### Features
 
-* **bump:**allow to `--set-versions x.y.z` to force next version
+- **bump:** allow to `--set-versions x.y.z` to force next version
 
 ### Refactors
 
-* **core:**split code into parser/output/main modules
+- **core:** split code into parser/output/main modules
 
 ### Build
 
-* bump version to 1.1.0
+- bump version to 1.1.0
 
 ### Chore
 
-* **changelog:**write CHANGELOG.md for version v1.1.0
+- **changelog:** write CHANGELOG.md for version v1.1.0
 
 ## v1.0.3 (2023-10-25 11:54:05+02:00)
 
 ### Chore
 
-* bump version to update broken github links at pypi
-* **build:**fix hatch env matrix
-* **changelog:**write CHANGELOG.md for version v1.0.2
-* **changelog:**write CHANGELOG.md for version v1.0.2
+- bump version to update broken github links at pypi
+- **build:** fix hatch env matrix
+- **changelog:** write CHANGELOG.md for version v1.0.2
+- **changelog:** write CHANGELOG.md for version v1.0.2
 
 ### Docs
 
-* add usage info, and fix github links
+- add usage info, and fix github links
 
 ## v1.0.2 (2023-10-25 11:37:54+02:00)
 
 ### Fixes
 
-* **core:**make project working with python 3.7 and 3.12
+- **core:** make project working with python 3.7 and 3.12
 
 ### Chore
 
-* bump package version
-* remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md
-* **changelog:**write CHANGELOG.md for version v1.0.2
+- bump package version
+- remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md
+- **changelog:** write CHANGELOG.md for version v1.0.2
 
 ## v1.0.1 (2023-10-25 11:11:46+02:00)
 
 ### Fixes
 
-* **bump:**proper Version sorting
+- **bump:** proper Version sorting
 
 ### Chore
 
-* **changelog:**write CHANGELOG.md for version v1.0.1
+- **changelog:** write CHANGELOG.md for version v1.0.1
 
 ## v1.0.0 (2023-10-25 11:09:45+02:00)
 
 ### Refactors
 
-* **core:**use optional rich for colorized output
+- **core:** use optional rich for colorized output
 
 ### Build
 
-* bump version to 1.0.0
-* initial commit
+- bump version to 1.0.0
+- initial commit

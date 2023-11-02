@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime, tzinfo
 from functools import partial
 from typing import Optional
 
@@ -13,6 +14,8 @@ try:
 except ImportError:
     rich = None
     use_colors = False
+
+TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
 
 
 def print_color(color: str, text: str):

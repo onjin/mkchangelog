@@ -4,7 +4,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, NewType, Optional, Set
 
+import semver
 from git import Commit
+
+from mkchangelog.utils import TZ_INFO
 
 if TYPE_CHECKING:
     pass
@@ -49,6 +52,11 @@ class Version:
     name: str
     date: Optional[datetime] = None
     semver: Optional[str] = None
+
+    @classmethod
+    def from_str(cls, name: str, version: str) -> Version:
+        semver_version = semver.Version.parse(version)
+        return cls(name, datetime.now(tz=TZ_INFO), semver_version)
 
 
 @dataclass

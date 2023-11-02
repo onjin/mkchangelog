@@ -13,12 +13,12 @@ from mkchangelog.commands import Command
 from mkchangelog.config import Settings
 from mkchangelog.core import (
     DATE_FORMAT,
-    TZ_INFO,
     get_next_version,
 )
 from mkchangelog.models import Version
 from mkchangelog.renderers import RENDERERS
 from mkchangelog.utils import (
+    TZ_INFO,
     print_blue,
     print_green,
     print_orange,
