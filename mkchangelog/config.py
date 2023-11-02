@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import configparser
 import copy
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, List
 
 from mkchangelog.models import CommitType
@@ -52,9 +54,49 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
 }
 
 
+def read_ini_settings(path: str) -> Dict[str, Any]:
+    plain_options = [
+        ("changelog_title", str),
+        ("commit_type_default_priority", int),
+        ("default_renderer", str),
+        ("git_tag_prefix", str),
+    ]
+    list_options = [
+        ("short_commit_types_list", str),
+    ]
+    dict_options = [
+        ("commit_types", str),
+        ("commit_types_priorities", int),
+    ]
+    settings: Dict[str, Any] = {}
+
+    path = Path(path)
+    config = configparser.ConfigParser()
+    config.read(path)
+    if "GENERAL" in config:
+        general = config["GENERAL"]
+        for key, opt_type in plain_options:
+            if key in general:
+                settings[key] = opt_type(general[key])
+        for key, opt_type in list_options:
+            if key in general:
+                settings[key] = [opt_type(opt) for opt in general[key].split(",")]
+    for key, opt_type in dict_options:
+        if key not in config:
+            continue
+        section = config[key]
+        option = {}
+        for opt, value in section.items():
+            option[opt] = opt_type(value)
+        settings[key] = option
+
+    return settings
+
+
 @lru_cache(maxsize=128)
 def get_settings():
     conf = copy.deepcopy(DEFAULT_SETTINGS)
+    conf.update(read_ini_settings(".mkchangelog"))
     # TODO: override some from .mkchangelog | .config/mkchangelog/config
     # TODO: override some from pyproject.toml
     # TODO: override some from ENV

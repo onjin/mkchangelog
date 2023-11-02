@@ -1,0 +1,27 @@
+[GENERAL]
+changelog_title = Changelog
+commit_type_default_priority = 10
+default_renderer = markdown
+git_tag_prefix = v
+short_commit_types_list = fix,feat
+
+[commit_types]
+build = Build
+chore = Chore
+ci = CI
+dev = Dev
+docs = Docs
+feat = Features
+fix = Fixes
+perf = Performance
+refactor = Refactors
+style = Style
+test = Test
+translations = Translations
+
+[commit_types_priorities]
+feat = 40
+fix = 30
+refactor = 20
+
+; vim: ft=ini
