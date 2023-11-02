@@ -65,6 +65,7 @@ class ChangesCommand(Command):
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
+        # FIXME: grep dates for versions from real versions if possible
         version_from = Version(args.rev_from) if args.rev_from else None
         version_to = Version(args.rev_to) if args.rev_to else None
         sys.stdout.write(

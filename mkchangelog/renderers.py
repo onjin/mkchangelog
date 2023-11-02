@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Type
 import semver
 
 from mkchangelog.config import Settings
-from mkchangelog.models import Changelog, ChangelogSection
+from mkchangelog.models import Changelog, ChangelogSection, LogLine
 
 
 class ChangelogRenderer(abc.ABC):
@@ -58,66 +58,68 @@ class JsonChangelogRenderer(ChangelogRenderer):
         return self.dumps(section)
 
 
-class MarkdownChangelogRenderer(ChangelogRenderer):
-    def render(self, changelog: Changelog) -> str:
-        output = []
-        output.append(f"# {self.settings.changelog_title}")
-        output.append("")
-        for section in changelog.sections:
-            output.append(self.render_section(section))
+class TextChangelogRenderer(ChangelogRenderer):
+    def _header(self, name: str, level: int) -> str:
+        if level == 1:
+            return f".-= {name} =-."
+        elif level == 2:  # noqa: PLR2004
+            return name
+        else:
+            return f"> {name}"
 
+    def _list_item(self, line: LogLine) -> str:
+        return f"- {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
+
+    def _break(self) -> str:
+        return ""
+
+    def render(self, changelog: Changelog) -> str:
+        output: List[str] = []
+        output.append(self._header(self.settings.changelog_title, 1))
+        output.append(self._break())
+        for section in changelog.sections:
+            if not section.changes and section.version and section.version.name == "HEAD":
+                continue
+            output.append(self.render_section(section))
         return "\n".join(output)
 
     def render_section(self, section: ChangelogSection) -> str:
         output: List[str] = []
 
-        output.append(f"## {section.version.name} ({section.version.date})")
-        output.append("")
+        output.append(self._header(f"{section.version.name} ({section.version.date})", level=2))
+        output.append(self._break())
 
         for commit_type in self.ordered_types(section.changes.keys()):
             changes = section.changes[commit_type]
-            output.append(f"### {self.settings.commit_types.get(commit_type, commit_type.capitalize)}")
-            output.append("")
+            output.append(self._header(self.settings.commit_types.get(commit_type, commit_type.capitalize), level=3))
+            output.append(self._break())
             for row in changes:
-                output.append(f"* {'**' + row.scope + ':**' if row.scope else ''}{row.summary}")
-            output.append("")
-        output.append("")
+                output.append(self._list_item(row))
+            output.append(self._break())
 
         return "\n".join(output)
 
 
-class RstChangelogRenderer(ChangelogRenderer):
-    def _header(self, name: str, level: str) -> str:
-        return "\n".join([name, level * len(name)])
+class MarkdownChangelogRenderer(TextChangelogRenderer):
+    def _header(self, name: str, level: int) -> str:
+        return f"{'#' * level} {name}"
 
-    def render(self, changelog: Changelog) -> str:
-        output = []
-        output.append(self._header(self.settings.changelog_title, "="))
-        output.append("")
-        for section in changelog.sections:
-            output.append(self.render_section(section))
+    def _list_item(self, line: LogLine) -> str:
+        return f"* {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
 
-        return "\n".join(output)
 
-    def render_section(self, section: ChangelogSection) -> str:
-        output: List[str] = []
+class RstChangelogRenderer(TextChangelogRenderer):
+    def _header(self, name: str, level: int) -> str:
+        mark = {1: "=", 2: "-", 3: "^"}
+        return "\n".join([name, mark.get(level, "^") * len(name)])
 
-        output.append(self._header(f"{section.version.name} ({section.version.date})", "-"))
-        output.append("")
-
-        for commit_type in self.ordered_types(section.changes.keys()):
-            changes = section.changes[commit_type]
-            output.append(self._header(f"{self.settings.commit_types.get(commit_type, commit_type.capitalize)}", "^"))
-            for row in changes:
-                output.append(f"* {'**' + row.scope + ':**' if row.scope else ''}{row.summary}")
-            output.append("")
-        output.append("")
-
-        return "\n".join(output)
+    def _list_item(self, line: LogLine) -> str:
+        return f"* {'**' + line.scope + ':**' if line.scope else ''}{line.summary}"
 
 
 RENDERERS: Dict[str, Type[ChangelogRenderer]] = {
     "json": JsonChangelogRenderer,
     "markdown": MarkdownChangelogRenderer,
     "rst": RstChangelogRenderer,
+    "txt": TextChangelogRenderer,
 }
