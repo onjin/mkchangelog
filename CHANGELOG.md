@@ -2,6 +2,10 @@
 
 ## HEAD (2023-11-02)
 
+### Features
+
+- **commands:** add `mkchangelog commit` command to generate proper commit message
+
 ### Refactors
 
 - **commands:** remove `changes` command, now it was mostly duplicating the `generate` command
