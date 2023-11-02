@@ -20,7 +20,7 @@ class GitMessageParser:
             r"(?:\((?P<scope>[\w-]+)\))?"
             r"(?P<breaking>!)?"
             r": "
-            r"(?P<summary>[\w /#!@,|()_'.`:-]+)"
+            r"(?P<summary>.+)$"
         ),
         re.MULTILINE,
     )

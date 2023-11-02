@@ -43,6 +43,10 @@ class TestRegexpes:
                     "summary": "prevent racing of requests",
                 },
             ),
+            (
+                "fix(parser): stranger chars: `x-explain: 1` `or_=` queries",
+                {"type": "fix", "scope": "parser", "summary": "stranger chars: `x-explain: 1` `or_=` queries"},
+            ),
         ],
     )
     def test_commit_regexp(self, message: str, matches: dict[str, str]):
