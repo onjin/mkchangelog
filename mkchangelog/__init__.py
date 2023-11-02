@@ -10,7 +10,6 @@ from typing import Optional, Sequence
 
 from mkchangelog.app import create_application
 from mkchangelog.commands.bump import BumpCommand
-from mkchangelog.commands.changes import ChangesCommand
 from mkchangelog.commands.generate import GenerateCommand
 from mkchangelog.config import get_settings
 
@@ -59,7 +58,6 @@ def main(argv: Optional[Sequence[str]] = None):
 
     settings = get_settings()
 
-    ChangesCommand.register(subparsers, settings)
     GenerateCommand.register(subparsers, settings)
     BumpCommand.register(subparsers, settings)
 
