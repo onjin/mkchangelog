@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import copy
 import sys
 from datetime import datetime, tzinfo
 from functools import partial
-from typing import Optional
+from typing import List, Optional
 
 import semver
 
@@ -59,6 +60,33 @@ def strtobool(val: str) -> bool:
     else:
         msg = f"invalid truth value {val!r}"
         raise ValueError(msg)
+
+
+def choice(question: str, choices: List[str], default: Optional[str] = None) -> str:
+    """Ask for choice.
+
+    Args:
+        question (str): question to display
+        choices (list[str]): list of available choices
+        default (str, optional): default answer
+
+    Returns:
+        str - selected choice
+    """
+    display_choices: List[str] = copy.copy(choices)
+    if default:
+        display_choices[display_choices.index(default)] = default.upper()
+
+    prompt = f"{question} [{','.join(display_choices)}]: "
+
+    while True:
+        sys.stdout.write(prompt)
+        choice = input().lower()
+        if default is not None and choice == "":
+            return default
+        if choice not in choices:
+            continue
+        return choice
 
 
 def yes_or_no(question: str, default: Optional[str] = "no") -> bool:

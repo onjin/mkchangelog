@@ -45,6 +45,24 @@ To generate changelog for current and all previous versions (signed tags) on the
 mkchangelog generate
 ```
 
+To generate commit message use:
+
+```console
+$ mkchangelog commit --stdout
+Git Commit Format: type(scope): summary
+
+Commit Type [build,chore,ci,dev,docs,FEAT,fix,perf,refactor,style,test,translations]: feat
+Scope: (optional): commands
+Summary line: add `mkchangelog commit` command to generate proper commit message
+Is breaking change? [y/N]
+Long description (body): The message be displayed at stdout by passing `--stdout` parameter. Otherwise will be saved as `message.txt` file.
+---
+feat(commands): add `mkchangelog commit` command to generate proper commit message
+
+The message be displayed at stdout by passing `--stdout` parameter. Otherwise will be saved as `message.txt` file.
+---
+```
+
 Experimental (but works somehow) commands:
 
 Interactive tool to generate changelog, bump version, commit changelog and tag version:
