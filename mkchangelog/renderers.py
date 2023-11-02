@@ -86,7 +86,7 @@ class TextChangelogRenderer(ChangelogRenderer):
     def render_section(self, section: ChangelogSection) -> str:
         output: List[str] = []
 
-        output.append(self._header(f"{section.version.name} ({section.version.date})", level=2))
+        output.append(self._header(f"{section.version.name} ({section.version.date.date().isoformat()})", level=2))
         output.append(self._break())
 
         if section.breaking_changes:
