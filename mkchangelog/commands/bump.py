@@ -19,9 +19,6 @@ from mkchangelog.models import Version
 from mkchangelog.renderers import RENDERERS
 from mkchangelog.utils import (
     TZ_INFO,
-    print_blue,
-    print_green,
-    print_orange,
     yes_or_no,
 )
 
@@ -116,7 +113,7 @@ class BumpCommand(Command):
             version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
             rev = "HEAD"
 
-        print_blue(f"Current version: {version_name} ({version_date})")
+        sys.stdout.write(f"Current version: {version_name} ({version_date})\n")
         commits = app.changelog_generator.log_provider.get_log(
             max_count=args.max_count,
             rev=rev,
@@ -137,7 +134,7 @@ class BumpCommand(Command):
             )
 
         if next_version:
-            print_green(f"Next version:    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})")
+            sys.stdout.write(f"Next version:    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})\n")
         else:
             sys.stdout.write("--> No next version available")
             return
@@ -148,7 +145,7 @@ class BumpCommand(Command):
             ext = exts[args.renderer]
             output_file = f"CHANGELOG.{ext}"
 
-        print_green(f"Output file:     {output_file}")
+        sys.stdout.write(f"Output file:     {output_file}\n")
 
         if args.dry_run:
             return
@@ -164,11 +161,11 @@ class BumpCommand(Command):
             f"--> Generate {output_file}?",
             default="no",
         ):
-            print_orange("Exiting")
+            sys.stdout.write("Exiting\n")
             return
 
         # generate changelog for current version
-        print_green(f"Generating:      {output_file}")
+        sys.stdout.write(f"Generating:      {output_file}\n")
         with open(output_file, "w") as fh:
             fh.write(changelog_str)
 
@@ -177,9 +174,9 @@ class BumpCommand(Command):
             f"--> Commit {output_file} and tag next version {next_version.name}?",
             default="no",
         ):
-            print_orange("Exiting")
+            sys.stdout.write("Exiting\n")
             return
-        print_green(f"Commiting:       {output_file}")
+        sys.stdout.write(f"Commiting:       {output_file}\n")
         # commit CHANGELOG.md
         git_commit(
             files=[output_file],
@@ -187,7 +184,7 @@ class BumpCommand(Command):
         )
 
         # tag version
-        print_green(f"Creating tag:    {next_version.name}")
+        sys.stdout.write(f"Creating tag:    {next_version.name}\n")
         # create tag with "chore(version): new version v1.1.1"
         create_tag(
             name=next_version.name,
