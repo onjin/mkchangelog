@@ -18,9 +18,9 @@ Features:
 
 - show the last changes as Markdown, ReStructuredText or Json
 - generate full CHANGELOG.[md,rst,json] file
-- compute and bump next versions (using `semver`)
 - group changes by `type` and by `scope` also
-- aggregate `Closes: XXX-XX[,YYY-YY]` and `Relates: XXX-XX[,YYY-YY]` footer references
+- provide own template by `--renderer template --template ./path/to/template.jinja`
+- compute and bump next versions (using `semver`)
 
 **Table of Contents**
 
