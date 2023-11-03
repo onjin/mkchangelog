@@ -15,16 +15,22 @@ class Application:
         self.settings = settings
         self.changelog_generator = changelog_generator
 
-    def get_renderer(self, name: str) -> ChangelogRenderer:
+    def get_renderer(self, name: str, template: Optional[str] = None) -> ChangelogRenderer:
         try:
-            return RENDERERS[name](self.settings)
+            renderer = RENDERERS[name]
+            if renderer.__name__ == "TemplateChangelogRenderer" and template:
+                return renderer(self.settings, template)
+            return renderer(self.settings)
         except KeyError:
             return None
 
-    def render_changelog(self, renderer: str, commit_types: Optional[list[CommitType]] = None):
-        renderer = self.get_renderer(renderer)
+    def render_changelog(
+        self, renderer: str, commit_types: Optional[list[CommitType]] = None, template: Optional[str] = None
+    ):
+        renderer = self.get_renderer(renderer, template)
         if not renderer:
             raise ValueError(f"Unknown renderer: {renderer}")
+
         return renderer.render(self.changelog_generator.get_changelog(commit_types=commit_types))
 
     def render_changelog_section(
@@ -46,7 +52,9 @@ class Application:
 
 def create_application(settings: Settings) -> Application:
     log_provider = GitLogProvider()
-    version_provider = GitVersionsProvider(tag_prefix=settings.git_tag_prefix)
+    versions_provider = GitVersionsProvider(tag_prefix=settings.git_tag_prefix)
     message_parser = GitMessageParser()
-    changelog_generator = ChangelogGenerator(log_provider, version_provider, message_parser=message_parser)
+    changelog_generator = ChangelogGenerator(
+        settings=settings, log_provider=log_provider, versions_provider=versions_provider, message_parser=message_parser
+    )
     return Application(settings=settings, changelog_generator=changelog_generator)

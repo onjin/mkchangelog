@@ -7,12 +7,47 @@ from datetime import datetime
 from typing import Any, Dict, List, Type
 
 import semver
+from git import Optional
+from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 
 from mkchangelog.config import Settings
-from mkchangelog.models import Changelog, ChangelogSection, LogLine
+from mkchangelog.models import Changelog, ChangelogSection
 
 
-class ChangelogRenderer(abc.ABC):
+class BaseChangelogRenderer:
+    def ordered_types(self, types: List[str]) -> List[str]:
+        """Return commit types sorted by ordering priority."""
+        return sorted(
+            types,
+            key=lambda t: self.settings.commit_types_priorities.get(t, self.settings.commit_type_default_priority),
+            reverse=True,
+        )
+
+
+class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
+    TEMPLATE: str = None
+
+    def __init__(self, settings: Settings, template: Optional[str] = None):
+        self.settings = settings
+        self.template = template or self.TEMPLATE
+        if template:
+            loader = FileSystemLoader(".", followlinks=True)
+        else:
+            loader = PackageLoader("mkchangelog")
+
+        self.env = Environment(loader=loader, autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True)
+        self.env.filters["underline"] = lambda line, char: f"{line}\n{ char * len(line)}"
+
+    def render(self, changelog: Changelog) -> Any:
+        template = self.env.get_template(self.template)
+        ctx = {
+            "settings": self.settings,
+            "changelog": changelog,
+        }
+        return template.render(**ctx)
+
+
+class ChangelogRenderer(BaseChangelogRenderer, abc.ABC):
     def __init__(self, settings: Settings):
         self.settings = settings
 
@@ -23,14 +58,6 @@ class ChangelogRenderer(abc.ABC):
     @abc.abstractmethod
     def render_section(self, section: ChangelogSection) -> Any:
         ...
-
-    def ordered_types(self, types: List[str]) -> List[str]:
-        """Return commit types sorted by ordering priority."""
-        return sorted(
-            types,
-            key=lambda t: self.settings.commit_types_priorities.get(t, self.settings.commit_type_default_priority),
-            reverse=True,
-        )
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -58,74 +85,20 @@ class JsonChangelogRenderer(ChangelogRenderer):
         return self.dumps(section)
 
 
-class TextChangelogRenderer(ChangelogRenderer):
-    def _header(self, name: str, level: int) -> str:
-        if level == 1:
-            return f".-= {name} =-."
-        elif level == 2:  # noqa: PLR2004
-            return name
-        else:
-            return f"> {name}"
-
-    def _list_item(self, line: LogLine) -> str:
-        return f"- {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
-
-    def _break(self) -> str:
-        return ""
-
-    def render(self, changelog: Changelog) -> str:
-        output: List[str] = []
-        output.append(self._header(self.settings.changelog_title, 1))
-        output.append(self._break())
-        for section in changelog.sections:
-            if not section.changes and section.version and section.version.name == "HEAD":
-                continue
-            output.append(self.render_section(section))
-        return "\n".join(output)
-
-    def render_section(self, section: ChangelogSection) -> str:
-        output: List[str] = []
-
-        output.append(self._header(f"{section.version.name} ({section.version.date.date().isoformat()})", level=2))
-        output.append(self._break())
-
-        if section.breaking_changes:
-            output.append(self._header("⚠ BREAKING CHANGES", level=3))
-            for line in section.breaking_changes:
-                for change in line.breaking_changes:
-                    output.append(self._break())
-                    output.append(f"- {change}")
-            output.append(self._break())
-
-        for commit_type in self.ordered_types(section.changes.keys()):
-            changes = section.changes[commit_type]
-            output.append(self._header(self.settings.commit_types.get(commit_type, commit_type.capitalize), level=3))
-            output.append(self._break())
-            for row in changes:
-                output.append(self._list_item(row))
-            output.append(self._break())
-
-        return "\n".join(output)
+class TextChangelogRenderer(TemplateChangelogRenderer):
+    TEMPLATE = "text.jinja2"
 
 
-class MarkdownChangelogRenderer(TextChangelogRenderer):
-    def _header(self, name: str, level: int) -> str:
-        return f"{'#' * level} {name}"
-
-    def _list_item(self, line: LogLine) -> str:
-        return f"- {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
+class MarkdownChangelogRenderer(TemplateChangelogRenderer):
+    TEMPLATE = "markdown.jinja2"
 
 
-class RstChangelogRenderer(TextChangelogRenderer):
-    def _header(self, name: str, level: int) -> str:
-        mark = {1: "=", 2: "-", 3: "^"}
-        return "\n".join([name, mark.get(level, "^") * len(name)])
-
-    def _list_item(self, line: LogLine) -> str:
-        return f"* {'**' + line.scope + ':** ' if line.scope else ''}{line.summary}"
+class RstChangelogRenderer(TemplateChangelogRenderer):
+    TEMPLATE = "rst.jinja2"
 
 
 RENDERERS: Dict[str, Type[ChangelogRenderer]] = {
+    "template": TemplateChangelogRenderer,
     "json": JsonChangelogRenderer,
     "markdown": MarkdownChangelogRenderer,
     "rst": RstChangelogRenderer,

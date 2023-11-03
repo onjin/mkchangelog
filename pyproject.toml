@@ -26,10 +26,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["gitpython","semver"]
+dependencies = ["gitpython","semver", "jinja2", "rich"]
 
 [project.optional-dependencies]
-colors = ["rich"]
 dev = ["pytest-stub"]
 
 [project.urls]

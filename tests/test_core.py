@@ -6,7 +6,8 @@ from typing import ClassVar, Dict, Generator, List, Optional
 
 import pytest
 
-from mkchangelog.core import ChangelogGenerator, get_next_version, group_commits_by_type
+from mkchangelog.config import get_settings
+from mkchangelog.core import ChangelogGenerator, get_next_version
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
 from mkchangelog.providers import LogProvider, VersionsProvider
@@ -118,22 +119,6 @@ def test_next_version_for_breaking_changes(current_version: str, commits: list[s
     assert version.name == next_version, version
 
 
-def test_group_commits():
-    loglines = log_lines(GIT_LOG)
-    result: dict[str, int] = {
-        commit_type: len(list(changes)) for commit_type, changes in group_commits_by_type(loglines)
-    }
-    assert sorted(result.keys()) == ["build", "chore", "ci", "docs", "feat", "fix", "refactor"]
-    assert sum(result.values()) == len(GIT_LOG) - 2  #
-    assert result["build"] == 3
-    assert result["chore"] == 7
-    assert result["ci"] == 2
-    assert result["docs"] == 1
-    assert result["feat"] == 2
-    assert result["fix"] == 3
-    assert result["refactor"] == 4
-
-
 class TestChangelogGenerator(object):
     @dataclass
     class ParamsForChangelog(object):
@@ -167,13 +152,13 @@ class TestChangelogGenerator(object):
                     input_versions=["1.1.1"],
                     output_version="HEAD",
                     output_changes={
-                        "feat": log_lines(
+                        "Features": log_lines(
                             [
                                 "feat(scope): xyz feat",
                                 "feat(scope): abc feat",
                             ]
                         ),
-                        "fix": log_lines(
+                        "Fixes": log_lines(
                             [
                                 "fix(scope): xyz fix",
                                 "fix(scope): abc fix",
@@ -196,14 +181,14 @@ class TestChangelogGenerator(object):
                     output_versions=["HEAD"],
                     output_changes={
                         "HEAD": {
-                            "build": log_lines(
+                            "Build": log_lines(
                                 [
                                     "build: bump version to 1.1.0",
                                     "build: bump version to 1.0.0",
                                     "build: initial commit",
                                 ]
                             ),
-                            "chore": log_lines(
+                            "Chore": log_lines(
                                 [
                                     "chore: bump version to update broken github links at pypi",
                                     "chore: bump package version",
@@ -214,31 +199,31 @@ class TestChangelogGenerator(object):
                                     "chore(changelog): write CHANGELOG.md for version v1.0.1",
                                 ]
                             ),
-                            "ci": log_lines(
+                            "CI": log_lines(
                                 [
                                     "ci(github): install missing `hatch` to run tests",
                                     "ci(github): add test workflow",
                                 ]
                             ),
-                            "docs": log_lines(
+                            "Docs": log_lines(
                                 [
                                     "docs: add usage info, and fix github links",
                                 ]
                             ),
-                            "feat": log_lines(
+                            "Features": log_lines(
                                 [
                                     "feat(bump): allow to `--set-versions x.y.z` to force next version",
                                     "feat(core): add `ChangelogGenerator.get_changelog()` method",
                                 ]
                             ),
-                            "fix": log_lines(
+                            "Fixes": log_lines(
                                 [
                                     "fix: upgrade deprecated sermer.parse",
                                     "fix(bump): proper Version sorting",
                                     "fix(core): make project working with python 3.7 and 3.12",
                                 ]
                             ),
-                            "refactor": log_lines(
+                            "Refactors": log_lines(
                                 [
                                     "refactor: organize code for `parser` and `renderer` (output)",
                                     "refactor: simplify commands",
@@ -255,6 +240,7 @@ class TestChangelogGenerator(object):
 
     def test_get_changelog_section(self, parameters: ParamsForChangelogSection):
         section = ChangelogGenerator(
+            settings=get_settings(),
             log_provider=MockLogProvider(log=parameters.input_log),
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(),
@@ -265,6 +251,7 @@ class TestChangelogGenerator(object):
 
     def test_get_changelog(self, parameters: ParamsForChangelog):
         generator = changelog = ChangelogGenerator(
+            settings=get_settings(),
             log_provider=MockLogProvider(log=parameters.input_log),
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(),
@@ -278,4 +265,4 @@ class TestChangelogGenerator(object):
             assert section.version.name == version_name
             assert len(section.changes.keys()) == len(parameters.output_changes[version_name].keys())
             for commit_type in section.changes.keys():
-                assert section.changes[commit_type] == parameters.output_changes[version_name][commit_type]
+                assert section.changes[commit_type] == parameters.output_changes[version_name][commit_type], commit_type

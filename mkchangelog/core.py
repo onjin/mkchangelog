@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 import semver
 
+from mkchangelog.config import Settings
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
 from mkchangelog.providers import LogProvider, VersionsProvider
@@ -58,22 +59,20 @@ def get_next_version(tag_prefix: str, current_version: str, commits: list[LogLin
     return Version(name=name, date=datetime.now(tz=TZ_INFO), semver=next_version)
 
 
-def group_commits_by_type(commits: Iterable[LogLine]) -> Dict[str, Iterable[LogLine]]:
-    return groupby(
-        sorted(commits, key=lambda x: x.commit_type),
-        attrgetter("commit_type"),
-    )
-
-
 class ChangelogGenerator:
     def __init__(
-        self, log_provider: LogProvider, versions_provider: VersionsProvider, message_parser: GitMessageParser
+        self,
+        settings: Settings,
+        log_provider: LogProvider,
+        versions_provider: VersionsProvider,
+        message_parser: GitMessageParser,
     ):
+        self.settings = settings
         self.log_provider = log_provider
         self.versions_provider = versions_provider
         self.message_parser = message_parser
 
-    def get_loglines(self, commits: list[str], *, strict=False) -> List[LogLine]:
+    def get_loglines(self, commits: list[str], *, strict: bool = False) -> List[LogLine]:
         lines: list[LogLine] = []
         for msg in commits:
             try:
@@ -82,6 +81,26 @@ class ChangelogGenerator:
                 if strict:
                     raise
         return lines
+
+    def group_commits_by_type(self, commits: Iterable[LogLine]) -> Dict[str, Iterable[LogLine]]:
+        grouped = {
+            group: sorted(commits, key=lambda i: i.scope if i.scope else "")
+            for group, commits in groupby(
+                sorted(commits, key=lambda x: x.commit_type),
+                attrgetter("commit_type"),
+            )
+        }
+        # reorder groups to support types render priorities
+        sorted_grouped: Dict[str, List[LogLine]] = {}
+        sorted_keys = sorted(
+            grouped.keys(),
+            key=lambda t: self.settings.commit_types_priorities.get(t, self.settings.commit_type_default_priority),
+            reverse=True,
+        )
+        for key in sorted_keys:
+            sorted_grouped[key] = grouped[key]
+
+        return sorted_grouped
 
     def get_changelog_section(
         self,
@@ -110,11 +129,14 @@ class ChangelogGenerator:
         if not log_lines:
             return ChangelogSection(version=from_version)
 
+        def type_name(commit_type: str) -> str:
+            return self.settings.commit_types.get(commit_type, commit_type.capitalize())
+
         section = ChangelogSection(
             version=from_version,
             changes={
-                commit_type: sorted(changes, key=lambda i: i.scope if i.scope else "")
-                for commit_type, changes in group_commits_by_type(log_lines)
+                type_name(commit_type): changes
+                for commit_type, changes in self.group_commits_by_type(log_lines).items()
             },
             reverts=reverts,
             breaking_changes=breaking_changes,
@@ -129,7 +151,10 @@ class ChangelogGenerator:
         versions: list[Version] = [head, *self.versions_provider.get_versions()]
         if len(versions) == 1:
             # just head -> all
-            return Changelog(sections=[self.get_changelog_section(from_version=versions[0], commit_types=commit_types)])
+            return Changelog(
+                title=self.settings.changelog_title,
+                sections=[self.get_changelog_section(from_version=versions[0], commit_types=commit_types)],
+            )
 
         sections: list[ChangelogSection] = []
         while len(versions) > 1:
@@ -138,4 +163,12 @@ class ChangelogGenerator:
             )
             versions = versions[1:]
         sections.append(self.get_changelog_section(from_version=versions[0], commit_types=commit_types))
-        return Changelog(sections=sections)
+
+        # skip empty head
+        def is_empty(section: ChangelogSection) -> bool:
+            if not section.changes and section.version and section.version.name == "HEAD":
+                return True
+            return False
+
+        sections = [section for section in sections if not is_empty(section)]
+        return Changelog(title=self.settings.changelog_title, sections=sections)

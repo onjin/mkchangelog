@@ -62,7 +62,21 @@ class GenerateCommand(Command):
             choices=RENDERERS.keys(),
             default=settings.default_renderer,
         )
+        parser.add_argument(
+            "--template",
+            action="store",
+            help="template to render changelog",
+            default=settings.default_template,
+        )
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
-        sys.stdout.write(app.render_changelog(renderer=args.renderer, commit_types=args.commit_types))
+        if args.template and args.renderer != "template":
+            sys.stderr.write("ERROR: The '--template' option is only supported with 'template' renderer.\n")
+            return
+        if not args.template and args.renderer == "template":
+            sys.stderr.write("ERROR: The '--template' option is required with 'template' renderer.\n")
+            return
+        sys.stdout.write(
+            app.render_changelog(renderer=args.renderer, commit_types=args.commit_types, template=args.template)
+        )

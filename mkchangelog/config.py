@@ -25,11 +25,14 @@ class Settings:
     commit_type_default_priority: int
     commit_types_priorities: Dict[CommitType, str]
 
+    default_template: str = ""
+
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "git_tag_prefix": "v",
     "changelog_title": "Changelog",
     "default_renderer": "markdown",
+    "default_template": "",
     "commit_types": {
         "build": "Build",
         "chore": "Chore",
@@ -59,6 +62,7 @@ def read_ini_settings(path: str) -> Dict[str, Any]:
         ("changelog_title", str),
         ("commit_type_default_priority", int),
         ("default_renderer", str),
+        ("default_template", str),
         ("git_tag_prefix", str),
     ]
     list_options = [

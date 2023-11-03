@@ -1,0 +1,24 @@
+{{ changelog.title | underline('=') }}
+
+{% for section in changelog.sections %}
+{{ (section.version.name + ' (' + section.version.date.date().isoformat() + ')') | underline('-')}}
+
+{% if section.breaking_changes %}
+⚠ BREAKING CHANGES
+^^^^^^^^^^^^^^^^^^
+{% for line in section.breaking_changes %}
+{% for change in line.breaking_changes %}
+- {{ change }}
+{% endfor %}
+{% endfor %}
+
+{% endif %}
+{% for commit_type, changes in section.changes.items() %}
+{{ commit_type | underline('^') }}
+
+{% for line in changes %}
+* {% if line.scope %}**{{ line.scope }}:** {% endif %}{{ line.summary }}
+{% endfor %}
+
+{% endfor %}
+{% endfor %}

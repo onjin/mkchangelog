@@ -69,4 +69,5 @@ class ChangelogSection:
 
 @dataclass
 class Changelog:
+    title: str
     sections: List[ChangelogSection]
