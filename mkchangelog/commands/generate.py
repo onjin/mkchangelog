@@ -18,10 +18,16 @@ class GenerateCommand(Command):
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
         parser.add_argument(
-            "--head-name",
+            "--unreleased-name",
             action="store",
-            help="custom unreleased version name",
-            default=None,
+            help="custom unreleased version name; default 'Unreleased'",
+            default="Unreleased",
+        )
+        parser.add_argument(
+            "--include-unreleased",
+            action="store_true",
+            help="include unreleased changes in changelog",
+            default=False,
         )
         parser.add_argument(
             "--header",
@@ -78,5 +84,11 @@ class GenerateCommand(Command):
             sys.stderr.write("ERROR: The '--template' option is required with 'template' renderer.\n")
             return
         sys.stdout.write(
-            app.render_changelog(renderer=args.renderer, commit_types=args.commit_types, template=args.template)
+            app.render_changelog(
+                renderer=args.renderer,
+                template=args.template,
+                commit_types=args.commit_types,
+                include_unreleased=args.include_unreleased,
+                unreleased_name=args.unreleased_name,
+            )
         )

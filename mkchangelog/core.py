@@ -145,10 +145,18 @@ class ChangelogGenerator:
 
     def get_changelog(
         self,
+        *,
         commit_types: Optional[list[CommitType]] = None,
+        include_unreleased: bool = False,
+        unreleased_name: str = "Unreleased",
     ) -> Changelog:
-        head = Version(name="HEAD", date=datetime.now(tz=TZ_INFO), semver=None)
-        versions: list[Version] = [head, *self.versions_provider.get_versions()]
+        versions: list[Version] = []
+        if include_unreleased:
+            head = Version(name="HEAD", date=datetime.now(tz=TZ_INFO), semver=None)
+            versions.append(head)
+        versions.extend(self.versions_provider.get_versions())
+        if not versions:
+            return Changelog(title=self.settings.changelog_title, sections=[])
         if len(versions) == 1:
             # just head -> all
             return Changelog(
@@ -164,11 +172,7 @@ class ChangelogGenerator:
             versions = versions[1:]
         sections.append(self.get_changelog_section(from_version=versions[0], commit_types=commit_types))
 
-        # skip empty head
-        def is_empty(section: ChangelogSection) -> bool:
-            if not section.changes and section.version and section.version.name == "HEAD":
-                return True
-            return False
-
-        sections = [section for section in sections if not is_empty(section)]
+        for section in sections:
+            if section.version.name == "HEAD":
+                section.version.name = unreleased_name
         return Changelog(title=self.settings.changelog_title, sections=sections)

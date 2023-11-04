@@ -25,13 +25,23 @@ class Application:
             return None
 
     def render_changelog(
-        self, renderer: str, commit_types: Optional[list[CommitType]] = None, template: Optional[str] = None
+        self,
+        *,
+        renderer: str,
+        template: Optional[str] = None,
+        commit_types: Optional[list[CommitType]] = None,
+        include_unreleased: bool = False,
+        unreleased_name: str = "Unreleased",
     ):
         renderer = self.get_renderer(renderer, template)
         if not renderer:
             raise ValueError(f"Unknown renderer: {renderer}")
 
-        return renderer.render(self.changelog_generator.get_changelog(commit_types=commit_types))
+        return renderer.render(
+            self.changelog_generator.get_changelog(
+                commit_types=commit_types, include_unreleased=include_unreleased, unreleased_name=unreleased_name
+            )
+        )
 
     def render_changelog_section(
         self,

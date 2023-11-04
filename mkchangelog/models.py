@@ -47,7 +47,7 @@ class MatchedLine:
     groups: Dict[str, Any]
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Version:
     name: str
     date: Optional[datetime] = None
