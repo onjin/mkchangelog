@@ -11,6 +11,7 @@ from typing import Optional, Sequence
 from mkchangelog.app import create_application
 from mkchangelog.commands.bump import BumpCommand
 from mkchangelog.commands.commit import CommitCommand
+from mkchangelog.commands.config import ConfigCommand
 from mkchangelog.commands.generate import GenerateCommand
 from mkchangelog.config import get_settings
 
@@ -62,6 +63,7 @@ def main(argv: Optional[Sequence[str]] = None):
     BumpCommand.register(subparsers, settings)
     CommitCommand.register(subparsers, settings)
     GenerateCommand.register(subparsers, settings)
+    ConfigCommand.register(subparsers, settings)
 
     args = parser.parse_args(argv)
     if args.command:

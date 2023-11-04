@@ -56,22 +56,39 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     },
 }
 
+plain_options = [
+    ("changelog_title", str),
+    ("commit_type_default_priority", int),
+    ("default_renderer", str),
+    ("default_template", str),
+    ("git_tag_prefix", str),
+]
+list_options = [
+    ("short_commit_types_list", str),
+]
+dict_options = [
+    ("commit_types", str),
+    ("commit_types_priorities", int),
+]
+
+
+def get_config() -> configparser.ConfigParser:
+    config = configparser.ConfigParser()
+
+    config.add_section("GENERAL")
+    for key, _ in plain_options:
+        config.set("GENERAL", key, str(DEFAULT_SETTINGS[key]))
+    for key, _ in list_options:
+        config.set("GENERAL", key, ",".join([str(v) for v in DEFAULT_SETTINGS[key]]))
+
+    for key, _ in dict_options:
+        config.add_section(key)
+        for opt, value in DEFAULT_SETTINGS[key].items():
+            config.set(key, opt, str(value))
+    return config
+
 
 def read_ini_settings(path: str) -> Dict[str, Any]:
-    plain_options = [
-        ("changelog_title", str),
-        ("commit_type_default_priority", int),
-        ("default_renderer", str),
-        ("default_template", str),
-        ("git_tag_prefix", str),
-    ]
-    list_options = [
-        ("short_commit_types_list", str),
-    ]
-    dict_options = [
-        ("commit_types", str),
-        ("commit_types_priorities", int),
-    ]
     settings: Dict[str, Any] = {}
 
     path = Path(path)
@@ -101,7 +118,6 @@ def read_ini_settings(path: str) -> Dict[str, Any]:
 def get_settings():
     conf = copy.deepcopy(DEFAULT_SETTINGS)
     conf.update(read_ini_settings(".mkchangelog"))
-    # TODO: override some from .mkchangelog | .config/mkchangelog/config
     # TODO: override some from pyproject.toml
     # TODO: override some from ENV
     return Settings(**conf)
