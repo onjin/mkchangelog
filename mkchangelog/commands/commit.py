@@ -21,7 +21,7 @@ class CommitCommand(Command):
         parser.add_argument(
             "--stdout",
             action="store_true",
-            help="Dump generated commit to standard output instead of GIT_COMMIT_MESSAGE",
+            help="Dump generated commit to standard output instead of 'message.txt'",
             default=None,
         )
 
