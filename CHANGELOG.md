@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.6.0 (2023-11-05)
+
+### Features
+
+- **config:** add `mkchangelog config` command to generate or peek parsed config
+- **generate:** add `--include-unreleased` and `--unreleased-name NAME` options
+
+### Fixes
+
+- **commit:** help message for `mkchangelog commit --stdout` option
+
+## v1.5.0 (2023-11-03)
+
+### Features
+
+- **renderers:** add `template` renderer and `--template` option to point to own `jinja` template to generate Changelog
+
 ## v1.4.0 (2023-11-02)
 
 ### Features

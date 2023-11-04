@@ -149,7 +149,12 @@ class BumpCommand(Command):
 
         if args.dry_run:
             return
-        changelog_str = app.render_changelog(renderer=args.renderer, commit_types=args.commit_types)
+        changelog_str = app.render_changelog(
+            renderer=args.renderer,
+            commit_types=args.commit_types,
+            include_unreleased=True,
+            unreleased_name=next_version.name,
+        )
         if yes_or_no(
             "--> Show next version changelog?",
             default="no",

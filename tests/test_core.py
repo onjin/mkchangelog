@@ -256,7 +256,7 @@ class TestChangelogGenerator(object):
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(),
         )
-        changelog = generator.get_changelog()
+        changelog = generator.get_changelog(include_unreleased=True)
         assert isinstance(changelog, Changelog)
         sections = (sec for sec in changelog.sections)
         for version_name in parameters.output_versions:
