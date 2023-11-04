@@ -14,13 +14,24 @@
 
 Use this CLI tool to create a changelog for a project from the git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
 
-Features:
+## Features:
 
-- show the last changes as Markdown, ReStructuredText or Json
-- generate full CHANGELOG.[md,rst,json] file
-- group changes by `type` and by `scope` also
-- provide own template by `--renderer template --template ./path/to/template.jinja`
-- compute and bump next versions (using `semver`)
+
+Changelog generation:
+- generate full CHANGELOG.[md,rst,txt,json] `mkchangelog generate --renderer <markdown | rst | txt | json>`
+- limit included commit types `mkchangelog generate --types feat,fix,refactor`
+- group commits by `type` and by `scope` also
+- include unreleased changes section (`mkchangelog generate --include-unreleased`)
+- pass own template by `--renderer template --template ./path/to/template.jinja`
+
+Configuration generation:
+- configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog config --generate > .mkchangelog`)
+
+Commit message helper:
+- create `mkchangelog.txt` with proper commit message `mkchangelog commit [--stdout]`, then `git commit -F message.txt`
+
+Bump version:
+- compute and bump next version (using `semver`) `mkchangelog bump`
 
 **Table of Contents**
 
