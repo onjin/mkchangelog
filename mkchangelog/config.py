@@ -5,25 +5,30 @@ import copy
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from mkchangelog.models import CommitType
 
 
 @dataclass(frozen=True)
 class Settings:
-    git_tag_prefix: str
     changelog_title: str
+    commit_type_default_priority: int
     default_renderer: str
-    # used for `all` to check valid types, and to provide
-    # header's names - used in ChangelogRenderers
-    commit_types: Dict[CommitType, str]
+    git_tag_prefix: str
+    include_unreleased: int
+    skip_empty: int
+    unreleased_name: str
+
     short_commit_types_list: List[str]
 
     # used to prioritize commit types section
     # - used in ChangelogRenderers
-    commit_type_default_priority: int
     commit_types_priorities: Dict[CommitType, str]
+
+    # used for `all` to check valid types, and to provide
+    # header's names - used in ChangelogRenderers
+    commit_types: Dict[CommitType, str]
 
     default_template: str = ""
 
@@ -33,6 +38,9 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "changelog_title": "Changelog",
     "default_renderer": "markdown",
     "default_template": "",
+    "include_unreleased": 0,
+    "unreleased_name": "Unreleased",
+    "skip_empty": 0,
     "commit_types": {
         "build": "Build",
         "chore": "Chore",
@@ -56,17 +64,20 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     },
 }
 
-plain_options = [
+plain_options: Tuple[str, type] = [
     ("changelog_title", str),
     ("commit_type_default_priority", int),
     ("default_renderer", str),
     ("default_template", str),
     ("git_tag_prefix", str),
+    ("include_unreleased", int),
+    ("unreleased_name", str),
+    ("skip_empty", int),
 ]
-list_options = [
+list_options: Tuple[str, type] = [
     ("short_commit_types_list", str),
 ]
-dict_options = [
+dict_options: Tuple[str, type] = [
     ("commit_types", str),
     ("commit_types_priorities", int),
 ]

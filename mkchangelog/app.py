@@ -32,6 +32,7 @@ class Application:
         commit_types: Optional[list[CommitType]] = None,
         include_unreleased: bool = False,
         unreleased_name: str = "Unreleased",
+        skip_empty: bool = False,
     ):
         renderer = self.get_renderer(renderer, template)
         if not renderer:
@@ -39,7 +40,10 @@ class Application:
 
         return renderer.render(
             self.changelog_generator.get_changelog(
-                commit_types=commit_types, include_unreleased=include_unreleased, unreleased_name=unreleased_name
+                commit_types=commit_types,
+                include_unreleased=include_unreleased,
+                unreleased_name=unreleased_name,
+                skip_empty=skip_empty,
             )
         )
 

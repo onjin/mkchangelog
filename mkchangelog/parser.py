@@ -17,7 +17,7 @@ class GitMessageParser:
             r"(?P<initial_commit>^Initial commit\.?)"
             r"|(?P<merge>^Merge [^\r\n]+)"
             r"|(?P<type>^build|chore|ci|dev|docs|feat|fix|perf|refactor|revert|style|test|translations|¯\\_\\(ツ\\)_\\/¯)"
-            r"(?:\((?P<scope>[\w-]+)\))?"
+            r"(?:\((?P<scope>[\w\.-]+)\))?"
             r"(?P<breaking>!)?"
             r": "
             r"(?P<summary>.+)$"

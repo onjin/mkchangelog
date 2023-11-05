@@ -149,6 +149,7 @@ class ChangelogGenerator:
         commit_types: Optional[list[CommitType]] = None,
         include_unreleased: bool = False,
         unreleased_name: str = "Unreleased",
+        skip_empty: bool = False,
     ) -> Changelog:
         versions: list[Version] = []
         if include_unreleased:
@@ -175,4 +176,6 @@ class ChangelogGenerator:
         for section in sections:
             if section.version.name == "HEAD":
                 section.version.name = unreleased_name
+        if skip_empty:
+            sections = [section for section in sections if section.changes]
         return Changelog(title=self.settings.changelog_title, sections=sections)

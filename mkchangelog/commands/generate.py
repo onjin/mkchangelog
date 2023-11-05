@@ -21,13 +21,19 @@ class GenerateCommand(Command):
             "--unreleased-name",
             action="store",
             help="custom unreleased version name; default 'Unreleased'",
-            default="Unreleased",
+            default=settings.unreleased_name,
         )
         parser.add_argument(
             "--include-unreleased",
             action="store_true",
             help="include unreleased changes in changelog",
-            default=False,
+            default=settings.include_unreleased,
+        )
+        parser.add_argument(
+            "--skip-empty",
+            action="store_true",
+            help="skip empty versions",
+            default=settings.skip_empty,
         )
         parser.add_argument(
             "--header",
@@ -90,5 +96,6 @@ class GenerateCommand(Command):
                 commit_types=args.commit_types,
                 include_unreleased=args.include_unreleased,
                 unreleased_name=args.unreleased_name,
+                skip_empty=args.skip_empty,
             )
         )
