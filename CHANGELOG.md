@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.0 (2023-11-05)
+
+### ⚠ BREAKING CHANGES
+- 'mkchangelog generate' now writes to file as default. Use '--stdout' to print changelog.
+
+### Features
+
+- more consistent settings, CLI parameters, and commands name and behavior
+
 ## v1.7.0 (2023-11-05)
 
 ### Features
