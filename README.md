@@ -22,7 +22,7 @@ Changelog generation:
 - limit included commit types `mkchangelog generate --types feat,fix,refactor`
 - group commits by `type` and by `scope` also
 - include unreleased changes section (`mkchangelog generate --include-unreleased`)
-- pass own template by `--renderer template --template ./path/to/template.jinja`
+- pass own template by `--renderer template --template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
 
 Configuration generation:
 - configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog config --generate > .mkchangelog`)
