@@ -179,6 +179,8 @@ class BumpCommand(Command):
             f"--> Commit {output_file} and tag next version {next_version.name}?",
             default="no",
         ):
+            with open("message.txt", "w") as fh:
+                fh.write(f"chore(changelog): write {output_file} for version {next_version.name}")
             sys.stdout.write("Exiting\n")
             return
         sys.stdout.write(f"Commiting:       {output_file}\n")

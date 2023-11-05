@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.0 (2023-11-05)
+
+### Features
+
+- **generate:** add `--skip-empty` to skip empty versions from changelog (with not commits for selected types)
+
 ## v1.6.0 (2023-11-05)
 
 ### Features
