@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     pass
 
 DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
-DEFAULT_MAX_GIT_LOG = 1000
 
 
 def get_next_version(tag_prefix: str, current_version: str, commits: list[LogLine]) -> Optional[Version]:
@@ -108,14 +107,14 @@ class ChangelogGenerator:
         from_version: Optional[Version] = None,
         to_version: Optional[Version] = None,
         commit_types: Optional[list[CommitType]] = None,
-        max_count: int = DEFAULT_MAX_GIT_LOG,
+        commit_limit: Optional[int] = None,
     ) -> ChangelogSection:
         if from_version is None:
             from_version = Version(name="HEAD", date=datetime.now(tz=TZ_INFO), semver=None)
         rev = from_version.name
         if to_version:
             rev = f"{rev}...{to_version.name}"
-        messages: List[str] = list(self.log_provider.get_log(max_count=max_count, rev=rev))
+        messages: List[str] = list(self.log_provider.get_log(commit_limit=commit_limit, rev=rev))
         log_lines: List[LogLine] = []
         log_lines = self.get_loglines(messages)
 
@@ -146,36 +145,47 @@ class ChangelogGenerator:
     def get_changelog(
         self,
         *,
+        title: Optional[str] = None,
         commit_types: Optional[list[CommitType]] = None,
-        include_unreleased: bool = False,
-        unreleased_name: str = "Unreleased",
-        skip_empty: bool = False,
+        unreleased: bool = False,
+        unreleased_version: str = "Unreleased",
+        hide_empty_releases: bool = False,
+        commit_limit: Optional[int] = None,
     ) -> Changelog:
+        if title is None:
+            title = self.settings.changelog_title
         versions: list[Version] = []
-        if include_unreleased:
+        if unreleased:
             head = Version(name="HEAD", date=datetime.now(tz=TZ_INFO), semver=None)
             versions.append(head)
         versions.extend(self.versions_provider.get_versions())
         if not versions:
-            return Changelog(title=self.settings.changelog_title, sections=[])
+            return Changelog(title=title, sections=[])
         if len(versions) == 1:
             # just head -> all
             return Changelog(
-                title=self.settings.changelog_title,
+                title=title,
                 sections=[self.get_changelog_section(from_version=versions[0], commit_types=commit_types)],
             )
 
         sections: list[ChangelogSection] = []
         while len(versions) > 1:
             sections.append(
-                self.get_changelog_section(from_version=versions[0], to_version=versions[1], commit_types=commit_types)
+                self.get_changelog_section(
+                    from_version=versions[0],
+                    to_version=versions[1],
+                    commit_types=commit_types,
+                    commit_limit=commit_limit,
+                )
             )
             versions = versions[1:]
-        sections.append(self.get_changelog_section(from_version=versions[0], commit_types=commit_types))
+        sections.append(
+            self.get_changelog_section(from_version=versions[0], commit_types=commit_types, commit_limit=commit_limit)
+        )
 
         for section in sections:
             if section.version.name == "HEAD":
-                section.version.name = unreleased_name
-        if skip_empty:
+                section.version.name = unreleased_version
+        if hide_empty_releases:
             sections = [section for section in sections if section.changes]
-        return Changelog(title=self.settings.changelog_title, sections=sections)
+        return Changelog(title=title, sections=sections)

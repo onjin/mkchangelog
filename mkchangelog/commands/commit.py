@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from typing import List
+
+from rich.console import Console
+from rich.prompt import Confirm, Prompt
 
 from mkchangelog.app import Application
 from mkchangelog.commands import Command
-from mkchangelog.config import Settings
-from mkchangelog.utils import choice, yes_or_no
 
 
 class CommitCommand(Command):
@@ -17,7 +17,7 @@ class CommitCommand(Command):
     aliases = ("c",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):  # noqa: ARG003
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
             "--stdout",
             action="store_true",
@@ -27,27 +27,33 @@ class CommitCommand(Command):
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
-        sys.stdout.write("Git Commit Format: type(scope): summary\n\n")
+        console = Console()
+        console.print("[green]Git Commit Format: type(scope): summary")
+        console.print()
 
         # 1. [req] ask for commit type
-        commit_type = choice("Commit Type", choices=list(app.settings.commit_types.keys()), default="feat")
+        commit_type = Prompt.ask("Commit Type", choices=list(app.settings.commit_types.keys()), default="feat")
 
         # 2. [opt] ask for scope
-        scope = input("Scope: (optional): ")
+        scope = Prompt.ask("Scope: (optional)")
 
         # 3. [req] ask for summary
-        summary = input("Summary line: ")
+        summary = ""
+        while summary == "":
+            summary = Prompt.ask("Summary line")
 
         # 4. [req] ask if breaking change [true/false]
-        is_breaking_change = yes_or_no("Is breaking change?")
+        is_breaking_change = Confirm.ask("Is breaking change?")
 
         # 5. [opt] ask for breaking change description
         if is_breaking_change:
-            breaking_change = input("Breaking change description: ")
+            breaking_change = ""
+            while breaking_change == "":
+                breaking_change = Prompt.ask("Breaking change description")
         else:
             breaking_change = None
         # 6. [opt] ask for description (body)
-        body = input("Long description (body): ")
+        body = Prompt.ask("Long description (body)")
 
         # 7. [opt] ask for footer key: values
         # 8. write to output
@@ -68,13 +74,13 @@ class CommitCommand(Command):
             lines.append("")
             lines.extend(footer_lines)
 
-        sys.stdout.write("---\n")
+        console.print("[green]---")
         if args.stdout:
-            sys.stdout.write("\n".join(lines))
-            sys.stdout.write("\n")
+            console.print("\n".join(lines))
+            console.print()
         else:
             with open("message.txt", "w") as fh:
                 fh.write("\n".join(lines))
-            sys.stdout.write("The 'message.txt' file was generated. You can edit it or just\n")
-            sys.stdout.write("type 'git commit -F message.txt' to use generated message\n")
-        sys.stdout.write("---\n")
+            console.print("[green]The 'message.txt' file was generated. You can edit it or just")
+            console.print("[green]type 'git commit -F message.txt' to use generated message.")
+        console.print("[green]---")

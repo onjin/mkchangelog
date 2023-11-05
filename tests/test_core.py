@@ -94,7 +94,7 @@ class MockLogProvider(LogProvider):
 
     def get_log(
         self,
-        max_count: int = 1000,  # noqa: ARG002
+        commit_limit: int = 1000,  # noqa: ARG002
         rev: Optional[str] = None,  # noqa: ARG002
         types: Optional[list[str]] = None,  # noqa: ARG002
     ) -> Generator[LogLine, None, None]:
@@ -256,7 +256,7 @@ class TestChangelogGenerator(object):
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(),
         )
-        changelog = generator.get_changelog(include_unreleased=True)
+        changelog = generator.get_changelog(unreleased=True)
         assert isinstance(changelog, Changelog)
         sections = (sec for sec in changelog.sections)
         for version_name in parameters.output_versions:

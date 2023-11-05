@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
+
+from rich.console import Console
 
 from mkchangelog.app import Application
 from mkchangelog.commands import Command
-from mkchangelog.config import Settings
-from mkchangelog.renderers import RENDERERS
+
+logger = logging.getLogger()
 
 
 class GenerateCommand(Command):
@@ -16,86 +19,91 @@ class GenerateCommand(Command):
     aliases = ("g", "gen")
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
+    def add_arguments(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
-            "--unreleased-name",
+            "-o",
+            "--output",
             action="store",
-            help="custom unreleased version name; default 'Unreleased'",
-            default=settings.unreleased_name,
-        )
-        parser.add_argument(
-            "--include-unreleased",
-            action="store_true",
-            help="include unreleased changes in changelog",
-            default=settings.include_unreleased,
-        )
-        parser.add_argument(
-            "--skip-empty",
-            action="store_true",
-            help="skip empty versions",
-            default=settings.skip_empty,
-        )
-        parser.add_argument(
-            "--header",
-            action="store",
-            help="changelog header, default 'Changelog'",
-            default="Changelog",
-        )
-        parser.add_argument(
-            "-m",
-            "--max-count",
-            action="store",
-            help="limit parsed lines, default 1000",
-            default=1000,
-        )
-        parser.add_argument(
-            "-p",
-            "--prefix",
-            action="store",
-            help="version tag prefix; default 'v'",
-            default="v",
+            help="output file, default: CHANGELOG.[ext]",
         )
         parser.add_argument(
             "-t",
-            "--types",
-            action="store",
-            dest="commit_types",
-            help="limit types",
-            nargs="+",
-            type=str,
-            default=settings.short_commit_types_list,
-            choices=[*settings.commit_types.keys(), "all"],
-        )
-        parser.add_argument(
-            "-r",
-            "--renderer",
-            action="store",
-            help="data renderer",
-            choices=RENDERERS.keys(),
-            default=settings.default_renderer,
-        )
-        parser.add_argument(
             "--template",
             action="store",
-            help="template to render changelog",
-            default=settings.default_template,
+            help="specify template to use [markdown, rst, json], or path to your template default: markdown",
+        )
+        parser.add_argument(
+            "-l",
+            "--commit-limit",
+            action="store",
+            help="number of commits to display per release, default: 100",
+            type=int,
+        )
+        parser.add_argument(
+            "-u",
+            "--unreleased",
+            action="store_true",
+            help="include unreleased changes in changelog",
+        )
+        parser.add_argument(
+            "-uv",
+            "--unreleased-version",
+            action="store",
+            help="use specified version as unreleased release; default 'Unreleased'",
+        )
+        parser.add_argument(
+            "--hide-empty-releases",
+            action="store_true",
+            help="skip empty versions",
+        )
+        parser.add_argument(
+            "--changelog-title",
+            action="store",
+            help="changelog title, default 'Changelog'",
+        )
+        parser.add_argument(
+            "--tag-prefix",
+            action="store",
+            help="version tag prefix; default 'v'",
+        )
+        parser.add_argument(
+            "--commit-types",
+            action="store",
+            dest="commit_types_list",
+            help="f.e. feat,fix,refactor, all - for all convigured; default from 'commit_types_list' settings",
+            nargs="+",
+            type=str,
+        )
+        parser.add_argument(
+            "--stdout",
+            action="store_true",
+            help="output changelog to stdout",
         )
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
-        if args.template and args.renderer != "template":
-            sys.stderr.write("ERROR: The '--template' option is only supported with 'template' renderer.\n")
-            return
-        if not args.template and args.renderer == "template":
-            sys.stderr.write("ERROR: The '--template' option is required with 'template' renderer.\n")
-            return
-        sys.stdout.write(
-            app.render_changelog(
-                renderer=args.renderer,
-                template=args.template,
-                commit_types=args.commit_types,
-                include_unreleased=args.include_unreleased,
-                unreleased_name=args.unreleased_name,
-                skip_empty=args.skip_empty,
-            )
+        options = app.settings.apply_args(args)
+
+        logging.info(f"[generate] template={options.template}")
+        logging.info(f"[generate] commit_types={options.commit_types_list}")
+        logging.info(f"[generate] unreleased={options.unreleased}")
+        logging.info(f"[generate] unreleased_version={options.unreleased_version}")
+        logging.info(f"[generate] hide_empty_releases={options.hide_empty_releases}")
+
+        changelog = app.render_changelog(
+            title=options.changelog_title,
+            template=options.template,
+            commit_types=options.commit_types_list,
+            unreleased=options.unreleased,
+            unreleased_version=options.unreleased_version,
+            hide_empty_releases=options.hide_empty_releases,
+            commit_limit=options.commit_limit,
         )
+        if args.stdout:
+            sys.stdout.write(changelog)
+        else:
+            Console().print(
+                f"[green]Writing changelog to {options.output} file. Use '--stdout' to print it out instead of writing."
+            )
+            with open(options.output, "w") as fh:
+                fh.write(changelog)

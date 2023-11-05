@@ -1,10 +1,14 @@
 [GENERAL]
+output = CHANGELOG.md
+template = markdown
+commit_limit = 100
+unreleased = False
+unreleased_version = Unreleased
+hide_empty_releases = False
 changelog_title = Changelog
+commit_types_list = fix,feat,refactor
 commit_type_default_priority = 10
-default_renderer = markdown
-git_tag_prefix = v
-short_commit_types_list = feat,fix,refactor
-skip_empty = 0
+tag_prefix = v
 
 [commit_types]
 build = Build
@@ -24,5 +28,3 @@ translations = Translations
 feat = 40
 fix = 30
 refactor = 20
-
-; vim: ft=ini

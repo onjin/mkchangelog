@@ -5,21 +5,20 @@
 import argparse
 import logging
 import os
-import sys
 from typing import Optional, Sequence
 
 from mkchangelog.app import create_application
 from mkchangelog.commands.bump import BumpCommand
 from mkchangelog.commands.commit import CommitCommand
-from mkchangelog.commands.config import ConfigCommand
 from mkchangelog.commands.generate import GenerateCommand
+from mkchangelog.commands.settings import SettingsCommand
 from mkchangelog.config import get_settings
 
 logger = logging.getLogger(__file__)
 env = os.getenv
 
 
-def add_stdout_handler(logger: logging.Logger, verbosity: int):
+def add_stdout_handler(verbosity: int):
     """Adds stdout handler with given verbosity to logger.
 
     Args:
@@ -30,17 +29,13 @@ def add_stdout_handler(logger: logging.Logger, verbosity: int):
                           3 - DEBUG
 
     Usage:
-        add_stdout_handler(logger=logger, verbosity=3)
+        add_stdout_handler(verbosity=3)
 
     """
 
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
     v_map = {1: logging.ERROR, 2: logging.INFO, 3: logging.DEBUG}
     level = v_map.get(verbosity, 1)
-    handler.setLevel(level)
-    logger.addHandler(handler)
-    logger.setLevel(level)
+    logging.basicConfig(level=level)
 
 
 def main(argv: Optional[Sequence[str]] = None):
@@ -53,21 +48,21 @@ def main(argv: Optional[Sequence[str]] = None):
         "--verbosity",
         action="store",
         default=1,
-        help="verbosity level, 1 (default), 2 or 3)",
+        type=int,
+        help="verbosity level, 1 - (ERROR, default), 2 - (INFO) or 3 - (DEBU)",
+        choices=[1, 2, 3],
     )
 
     subparsers = parser.add_subparsers(title="command", dest="command")
 
     settings = get_settings()
 
-    BumpCommand.register(subparsers, settings)
-    CommitCommand.register(subparsers, settings)
-    GenerateCommand.register(subparsers, settings)
-    ConfigCommand.register(subparsers, settings)
+    for cmd in [BumpCommand, CommitCommand, GenerateCommand, SettingsCommand]:
+        cmd.register(subparsers)
 
     args = parser.parse_args(argv)
     if args.command:
-        add_stdout_handler(logger, int(args.verbosity))
+        add_stdout_handler(int(args.verbosity))
         app = create_application(settings)
         args.command(args, app)
     else:

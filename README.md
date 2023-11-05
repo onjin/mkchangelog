@@ -14,6 +14,15 @@
 
 Use this CLI tool to create a changelog for a project from the git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
 
+
+**NOTE**: Since version `2.0.0` there are some significant changes:
+- `mkchangelog generate` writes to `--output file` as default - use `--stdout` to write to stdout
+- `mkchangelog config` commands was renamed to `mkchangelog settings`
+- options in `.mkchangelog` along with `mkchangelog generate` options were changed to be more consistent, use `mkchangelog settings --generate` to get new config file
+- the `mkchangelog generate` options `--renderer` and `--template` were merged as `--template [renderer name | path to template]`
+
+For other parameters changes refer to [usage](#usage) section.
+
 ## Features:
 
 
@@ -50,10 +59,38 @@ pip install mkchangelog[colors]  # for console colorized output
 
 The list of versions is taken from list of signed git tags detected by prefix (default `v`, f.e. `v1.3.4`).
 
-To generate changelog for current and all previous versions (signed tags) on the screen:
+To generate changelog for current and all previous versions (signed tags) to CHAGELOG.md (default):
 
 ```console
-mkchangelog generate
+mkchangelog generate [--stdout] [--template <markdown | rst | json | ./tmpl.jinja >]
+```
+
+```console
+❯ mkchangelog generate --help
+usage: mkchangelog generate [-h] [-o OUTPUT] [-t TEMPLATE] [-l COMMIT_LIMIT] [-u] [-uv UNRELEASED_VERSION] [--hide-empty-releases]
+                            [--changelog-title CHANGELOG_TITLE] [--tag-prefix TAG_PREFIX] [--commit-types COMMIT_TYPES_LIST [COMMIT_TYPES_LIST ...]]
+                            [--stdout]
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        output file, default: CHANGELOG.md
+  -t TEMPLATE, --template TEMPLATE
+                        specify template to use [markdown, rst, json], or path to your template default: markdown
+  -l COMMIT_LIMIT, --commit-limit COMMIT_LIMIT
+                        number of commits to display per release, default: 100
+  -u, --unreleased      include unreleased changes in changelog
+  -uv UNRELEASED_VERSION, --unreleased-version UNRELEASED_VERSION
+                        use specified version as unreleased release; default 'Unreleased'
+  --hide-empty-releases
+                        skip empty versions
+  --changelog-title CHANGELOG_TITLE
+                        changelog title, default 'Changelog'
+  --tag-prefix TAG_PREFIX
+                        version tag prefix; default 'v'
+  --commit-types COMMIT_TYPES_LIST [COMMIT_TYPES_LIST ...]
+                        f.e. feat,fix,refactor, all - for all convigured; default from 'commit_types_list' settings
+  --stdout              output changelog to stdout
 ```
 
 To generate commit message use:
@@ -74,28 +111,42 @@ The message be displayed at stdout by passing `--stdout` parameter. Otherwise wi
 ---
 ```
 
-Experimental (but works somehow) commands:
+Experimental commands:
 
 Interactive tool to generate changelog, bump version, commit changelog and tag version:
 
 ```console
-mkchangelog bump - interactive tool; compute next versions from `feat`, `fix` and `breaking_changes`, optionaly write `CHANGELOG.md`, commit and tag next version
+mkchangelog bump ## The 'bump' commands gets same parameters as 'generate'
 ```
 
 ## Configuration
 
 You can change default configuration using `.mkchangelog` (ini format) file in current directory.
 
+```console
+mkchangelog settings --generate  # generates default .mkchangelog file
+```
+
+```console
+mkchangelog settings # shows current default settings merged with .mkchangelog settings
+```
+
 Default configuration is:
 ```ini
-[GENERAL]
-changelog_title = Changelog         ; title of generated text changelog
-commit_type_default_priority = 10   ; default priority for rendered commit types
-default_renderer = markdown         ; default renderer (use `-r <renderer` to overwrite)
-git_tag_prefix = v                  ; default git tag prefix for versions
-short_commit_types_list = fix,feat  ; default list of commit types included in changelog (use `-t <type,type,.. | all>` to overwrite)
 
-[commit_types]                      ; available commit prefixes along with their names used to render headers
+[GENERAL]
+output = CHANGELOG.md
+template = markdown
+commit_limit = 100
+unreleased = False
+unreleased_version = Unreleased
+hide_empty_releases = False
+changelog_title = Changelog
+commit_types_list = fix,feat
+commit_type_default_priority = 10
+tag_prefix = v
+
+[commit_types]
 build = Build
 chore = Chore
 ci = CI
@@ -109,12 +160,10 @@ style = Style
 test = Test
 translations = Translations
 
-[commit_types_priorities]           ; prioritize commit types to render them earlier, check `commit_type_default_priority`
+[commit_types_priorities]
 feat = 40
 fix = 30
 refactor = 20
-
-; vim: ft=ini
 ```
 
 ## Contributing

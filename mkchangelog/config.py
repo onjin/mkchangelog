@@ -1,46 +1,28 @@
 from __future__ import annotations
 
+import argparse
 import configparser
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
-from mkchangelog.models import CommitType
-
-
-@dataclass(frozen=True)
-class Settings:
-    changelog_title: str
-    commit_type_default_priority: int
-    default_renderer: str
-    git_tag_prefix: str
-    include_unreleased: int
-    skip_empty: int
-    unreleased_name: str
-
-    short_commit_types_list: List[str]
-
-    # used to prioritize commit types section
-    # - used in ChangelogRenderers
-    commit_types_priorities: Dict[CommitType, str]
-
-    # used for `all` to check valid types, and to provide
-    # header's names - used in ChangelogRenderers
-    commit_types: Dict[CommitType, str]
-
-    default_template: str = ""
-
+from git import List
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
-    "git_tag_prefix": "v",
-    "changelog_title": "Changelog",
-    "default_renderer": "markdown",
-    "default_template": "",
-    "include_unreleased": 0,
-    "unreleased_name": "Unreleased",
-    "skip_empty": 0,
+    "GENERAL": {
+        "output": "CHANGELOG.md",
+        "template": "markdown",
+        "commit_limit": 100,
+        "unreleased": False,
+        "unreleased_version": "Unreleased",
+        "hide_empty_releases": False,
+        "changelog_title": "Changelog",
+        "commit_types_list": ["fix", "feat"],
+        "commit_type_default_priority": 10,
+        "tag_prefix": "v",
+    },
     "commit_types": {
         "build": "Build",
         "chore": "Chore",
@@ -55,8 +37,6 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
         "test": "Test",
         "translations": "Translations",
     },
-    "short_commit_types_list": ["fix", "feat"],
-    "commit_type_default_priority": 10,
     "commit_types_priorities": {
         "feat": 40,
         "fix": 30,
@@ -64,38 +44,122 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     },
 }
 
-plain_options: Tuple[str, type] = [
-    ("changelog_title", str),
-    ("commit_type_default_priority", int),
-    ("default_renderer", str),
-    ("default_template", str),
-    ("git_tag_prefix", str),
-    ("include_unreleased", int),
-    ("unreleased_name", str),
-    ("skip_empty", int),
-]
-list_options: Tuple[str, type] = [
-    ("short_commit_types_list", str),
-]
-dict_options: Tuple[str, type] = [
-    ("commit_types", str),
-    ("commit_types_priorities", int),
-]
+
+@dataclass(frozen=True)
+class Settings:
+    # 'stdout' or filename
+    output: str = DEFAULT_SETTINGS["GENERAL"]["output"]
+
+    # 'markdown', 'rst', 'json' or filename
+    template: str = DEFAULT_SETTINGS["GENERAL"]["template"]
+
+    # commits limit per release
+    commit_limit: int = DEFAULT_SETTINGS["GENERAL"]["commit_limit"]
+
+    # include unreleased changes
+    unreleased: bool = DEFAULT_SETTINGS["GENERAL"]["unreleased"]
+
+    # unreleased version name 'Unreleased'
+    unreleased_version: str = DEFAULT_SETTINGS["GENERAL"]["unreleased_version"]
+
+    # hide releases with no commits gathered by types
+    hide_empty_releases: bool = DEFAULT_SETTINGS["GENERAL"]["hide_empty_releases"]
+
+    # used in templates to generate main header
+    changelog_title: str = DEFAULT_SETTINGS["GENERAL"]["changelog_title"]
+
+    # git tag version prefix
+    tag_prefix: str = DEFAULT_SETTINGS["GENERAL"]["tag_prefix"]
+
+    # commit types to gather by default
+    commit_types_list: list[str] = field(default_factory=lambda: DEFAULT_SETTINGS["GENERAL"]["commit_types_list"])
+
+    # default sort priority for commit type, used to rendering
+    commit_type_default_priority: int = DEFAULT_SETTINGS["GENERAL"]["commit_type_default_priority"]
+
+    # used to prioritize commit types section
+    # - used in ChangelogRenderers
+    commit_types_priorities: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types_priorities"])
+
+    # used for `all` to check valid types, and to provide
+    # header's names - used in ChangelogRenderers
+    commit_types: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types"])
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any], *, strict: bool = True) -> Settings:
+        """Create settings from dictionary.
+
+        The input dictionary must contain 'GENERAL' section.
+
+        In strict mode will raise `ValueError` on unknown keys/sections otherwise
+        the unknown keys will be skipped.
+
+        Args:
+            d: input dictionary
+            strict: raise ValueError on unknown keys or skip keys
+
+        Raises:
+            ValueError: raised on unknown keys
+
+        Returns:
+            Settings
+        """
+        config = {}
+        for section, conf in d.items():
+            if section == "GENERAL":
+                for key, value in conf.items():
+                    if key not in Settings.__dataclass_fields__:
+                        if strict:
+                            raise ValueError(f"Unknown setting {key}")
+                        else:
+                            continue
+                    config[key] = value
+            else:
+                if section not in Settings.__dataclass_fields__:
+                    if strict:
+                        raise ValueError(f"Unknown setting {section}")
+                    else:
+                        continue
+                config[section] = conf
+        return Settings(**config)
+
+    def as_dict(self) -> Dict[str, Any]:
+        config = {}
+        for section, conf in DEFAULT_SETTINGS.items():
+            if section == "GENERAL":
+                config["GENERAL"] = {}
+                for key, _ in conf.items():
+                    config["GENERAL"][key] = getattr(self, key)
+            else:
+                config[section] = conf
+        return config
+
+    def apply_args(self, args: argparse.Namespace, *, strict: bool = True) -> Settings:
+        conf = self.as_dict()
+        for key, value in args._get_kwargs():
+            if key in ["verbosity", "command", "stdout"]:
+                continue
+            if value is None:
+                continue
+            conf["GENERAL"][key] = value
+        return Settings.from_dict(conf, strict=strict)
 
 
-def get_config() -> configparser.ConfigParser:
+def generate_config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
 
     config.add_section("GENERAL")
-    for key, _ in plain_options:
-        config.set("GENERAL", key, str(DEFAULT_SETTINGS[key]))
-    for key, _ in list_options:
-        config.set("GENERAL", key, ",".join([str(v) for v in DEFAULT_SETTINGS[key]]))
+    for key, value in DEFAULT_SETTINGS["GENERAL"].items():
+        if isinstance(value, List):
+            str_value: str = ",".join(str(v) for v in value)
+        else:
+            str_value = str(value)
+        config.set("GENERAL", key, str_value)
 
-    for key, _ in dict_options:
-        config.add_section(key)
-        for opt, value in DEFAULT_SETTINGS[key].items():
-            config.set(key, opt, str(value))
+    for section_name in ["commit_types", "commit_types_priorities"]:
+        config.add_section(section_name)
+        for key, value in DEFAULT_SETTINGS[section_name].items():
+            config.set(section_name, key, str(value))
     return config
 
 
@@ -105,23 +169,23 @@ def read_ini_settings(path: str) -> Dict[str, Any]:
     path = Path(path)
     config = configparser.ConfigParser()
     config.read(path)
-    if "GENERAL" in config:
-        general = config["GENERAL"]
-        for key, opt_type in plain_options:
-            if key in general:
-                settings[key] = opt_type(general[key])
-        for key, opt_type in list_options:
-            if key in general:
-                settings[key] = [opt_type(opt) for opt in general[key].split(",")]
-    for key, opt_type in dict_options:
-        if key not in config:
-            continue
-        section = config[key]
-        option = {}
-        for opt, value in section.items():
-            option[opt] = opt_type(value)
-        settings[key] = option
-
+    for section_name, _ in DEFAULT_SETTINGS.items():
+        if section_name in config:
+            section = config[section_name]
+            if section_name == "GENERAL":
+                settings["GENERAL"] = {}
+                for key, default in DEFAULT_SETTINGS[section_name].items():
+                    if key not in section:
+                        continue
+                    if isinstance(default, bool):
+                        read_val = bool(section[key])
+                    elif isinstance(default, list):
+                        read_val = section[key].split(",")
+                    else:
+                        read_val = section[key]
+                    settings["GENERAL"][key] = read_val
+            else:
+                settings[section_name] = {k: v for k, v in section.items()}  # noqa: C416
     return settings
 
 
@@ -131,4 +195,4 @@ def get_settings():
     conf.update(read_ini_settings(".mkchangelog"))
     # TODO: override some from pyproject.toml
     # TODO: override some from ENV
-    return Settings(**conf)
+    return Settings.from_dict(conf)

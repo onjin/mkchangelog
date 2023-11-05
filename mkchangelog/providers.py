@@ -11,7 +11,7 @@ from mkchangelog.utils import create_version
 
 class LogProvider(abc.ABC):
     @abc.abstractmethod
-    def get_log(self, max_count: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
         ...
 
 
@@ -68,12 +68,12 @@ class GitVersionsProvider(VersionsProvider):
 
 
 class GitLogProvider(LogProvider):
-    def get_log(self, max_count: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
         """Return git log parsed using Conventional Commit format.
 
         Args:
-            max_count (int, optional): max lines to parse
+            commit_limit (int, optional): max lines to parse
             rev (str, optional): git rev as branch name or range
         """
         repo = Repo(".")
-        return [commit.message for commit in repo.iter_commits(max_count=max_count, no_merges=True, rev=rev)]
+        return [commit.message for commit in repo.iter_commits(max_count=commit_limit, no_merges=True, rev=rev)]

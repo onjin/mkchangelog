@@ -1,25 +1,22 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from datetime import datetime
-from typing import Dict
 
-import semver
 from git import Repo
+from rich.console import Console
+from rich.prompt import Confirm
 
 from mkchangelog.app import Application
 from mkchangelog.commands import Command
-from mkchangelog.config import Settings
+from mkchangelog.commands.generate import GenerateCommand
 from mkchangelog.core import (
     DATE_FORMAT,
     get_next_version,
 )
 from mkchangelog.models import Version
-from mkchangelog.renderers import RENDERERS
 from mkchangelog.utils import (
     TZ_INFO,
-    yes_or_no,
 )
 
 
@@ -42,156 +39,106 @@ class BumpCommand(Command):
     aliases = ("b",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser, settings: Settings):
+    def add_arguments(cls, parser: argparse.ArgumentParser):
+        GenerateCommand.add_arguments(parser)
         parser.add_argument(
-            "--header",
+            "-v",
+            "--latest-version",
             action="store",
-            help="changelog header, default 'Changelog'",
-            default="Changelog",
-        )
-        parser.add_argument(
-            "-m",
-            "--max-count",
-            action="store",
-            help="limit parsed lines, default 1000",
-            default=1000,
-        )
-        parser.add_argument(
-            "-of",
-            "--output-file",
-            action="store",
-            help="output changelog file; default CHANGELOG. + renderer extension",
-            default=None,
-        )
-        parser.add_argument(
-            "-p",
-            "--prefix",
-            action="store",
-            help=f"version tag prefix; default '{settings.git_tag_prefix}'",
-            default=settings.git_tag_prefix,
-        )
-        parser.add_argument(
-            "-s",
-            "--set-version",
-            action="store",
-            help="force version instead of detecting",
+            help="use specified version as latest version",
         )
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="just show versions",
-        )
-        parser.add_argument(
-            "-t",
-            "--types",
-            action="store",
-            dest="commit_types",
-            help="limit types",
-            nargs="+",
-            type=str,
-            default=settings.short_commit_types_list,
-            choices=[*settings.commit_types.keys(), "all"],
-        )
-        parser.add_argument(
-            "-r",
-            "--renderer",
-            action="store",
-            help="data renderer",
-            choices=RENDERERS.keys(),
-            default=settings.default_renderer,
+            help="only show next version",
         )
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
+        console = Console()
+        options = app.settings.apply_args(args, strict=False)
+
         version = app.changelog_generator.versions_provider.get_last_version()
         if version:
             version_name = version.name
             version_date = version.date.strftime(DATE_FORMAT)
             rev = f"HEAD...{version_name}"
         else:
-            version_name = f"{args.prefix}0.0.0"
+            version_name = f"{options.tag_prefix}0.0.0"
             version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
             rev = "HEAD"
 
-        sys.stdout.write(f"Current version: {version_name} ({version_date})\n")
+        console.print(f"[green]Current version:[/green] {version_name} ({version_date})")
         commits = app.changelog_generator.log_provider.get_log(
-            max_count=args.max_count,
+            commit_limit=options.commit_limit,
             rev=rev,
         )
         commits = app.changelog_generator.get_loglines(commits, strict=False)
 
-        if args.set_version:
-            next_version = Version(
-                name=f"{args.prefix}{args.set_version}",
-                date=datetime.now(tz=TZ_INFO),
-                semver=semver.Version.parse(args.set_version),
+        if args.latest_version:
+            next_version = Version.from_str(
+                name=f"{options.tag_prefix}{args.latest_version}", version=args.latest_version
             )
         else:
-            next_version = get_next_version(
-                tag_prefix=args.prefix,
-                current_version=version_name,
-                commits=commits,
-            )
+            next_version = get_next_version(options.tag_prefix, version_name, commits)
 
         if next_version:
-            sys.stdout.write(f"Next version:    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})\n")
+            console.print(
+                f"[blue]Next version:[/blue]    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})"
+            )
         else:
-            sys.stdout.write("--> No next version available")
+            console.print("[red]--> No next version available")
             return
-
-        output_file = args.output_file
-        if not output_file:
-            exts: Dict[str, str] = {"markdown": "md", "rst": "rst", "json": "json"}
-            ext = exts[args.renderer]
-            output_file = f"CHANGELOG.{ext}"
-
-        sys.stdout.write(f"Output file:     {output_file}\n")
 
         if args.dry_run:
             return
+
         changelog_str = app.render_changelog(
-            renderer=args.renderer,
-            commit_types=args.commit_types,
-            include_unreleased=True,
-            unreleased_name=next_version.name,
+            title=options.changelog_title,
+            template=options.template,
+            commit_types=options.commit_types_list,
+            unreleased=True,
+            unreleased_version=next_version.name,
+            hide_empty_releases=options.hide_empty_releases,
+            commit_limit=options.commit_limit,
         )
-        if yes_or_no(
+        if Confirm.ask(
             "--> Show next version changelog?",
-            default="no",
+            default=False,
         ):
-            sys.stdout.write(changelog_str)
+            console.print(changelog_str)
 
         ### Generate Changelog File
-        if not yes_or_no(
-            f"--> Generate {output_file}?",
-            default="no",
+        if not Confirm.ask(
+            f"--> Generate {options.output}?",
+            default=False,
         ):
-            sys.stdout.write("Exiting\n")
+            console.print("Exiting")
             return
 
         # generate changelog for current version
-        sys.stdout.write(f"Generating:      {output_file}\n")
-        with open(output_file, "w") as fh:
+        console.print(f"[green]Generating:[/green]      {options.output}")
+        with open(options.output, "w") as fh:
             fh.write(changelog_str)
 
         ### Commit & Tag new version
-        if not yes_or_no(
-            f"--> Commit {output_file} and tag next version {next_version.name}?",
-            default="no",
+        if not Confirm.ask(
+            f"--> Commit {options.output} and tag next version {next_version.name}?",
+            default=False,
         ):
             with open("message.txt", "w") as fh:
-                fh.write(f"chore(changelog): write {output_file} for version {next_version.name}")
-            sys.stdout.write("Exiting\n")
+                fh.write(f"chore(changelog): write {options.output} for version {next_version.name}")
+            console.print("Exiting")
             return
-        sys.stdout.write(f"Commiting:       {output_file}\n")
+        console.print(f"[green]Commiting:[/green]       {options.output}")
         # commit CHANGELOG.md
         git_commit(
-            files=[output_file],
-            message=f"chore(changelog): write {output_file} for version {next_version.name}",
+            files=[options.output],
+            message=f"chore(changelog): write {options.output} for version {next_version.name}",
         )
 
         # tag version
-        sys.stdout.write(f"Creating tag:    {next_version.name}\n")
+        console.print(f"[green]Creating tag:[/green]    {next_version.name}")
         # create tag with "chore(version): new version v1.1.1"
         create_tag(
             name=next_version.name,

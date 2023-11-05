@@ -4,6 +4,7 @@ import abc
 import dataclasses
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Type
 
 import semver
@@ -29,9 +30,14 @@ class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
 
     def __init__(self, settings: Settings, template: Optional[str] = None):
         self.settings = settings
+
+        # support absolute templates path
+        if template and template.startswith("/"):
+            template = template[1:]
+
         self.template = template or self.TEMPLATE
         if template:
-            loader = FileSystemLoader(".", followlinks=True)
+            loader = FileSystemLoader([Path.cwd(), Path.cwd().root], followlinks=True)
         else:
             loader = PackageLoader("mkchangelog")
 
@@ -98,7 +104,6 @@ class RstChangelogRenderer(TemplateChangelogRenderer):
 
 
 RENDERERS: Dict[str, Type[ChangelogRenderer]] = {
-    "template": TemplateChangelogRenderer,
     "json": JsonChangelogRenderer,
     "markdown": MarkdownChangelogRenderer,
     "rst": RstChangelogRenderer,
