@@ -1,0 +1,2 @@
+Apart from custom version header you can also put footer (under all version changes)
+by creating `.mkchangelog.d/versions/v1.0.3/footer` :).

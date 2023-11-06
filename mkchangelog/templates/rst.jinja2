@@ -3,6 +3,10 @@
 {% for section in changelog.sections %}
 {{ (section.version.name + ' (' + section.version.date.date().isoformat() + ')') | underline('-')}}
 
+{% if section.header %}
+{{ section.header }}
+
+{% endif %}
 {% if section.breaking_changes %}
 ⚠ BREAKING CHANGES
 ^^^^^^^^^^^^^^^^^^
@@ -21,4 +25,8 @@
 {% endfor %}
 
 {% endfor %}
+{% if section.footer %}
+{{ section.footer }}
+
+{% endif %}
 {% endfor %}

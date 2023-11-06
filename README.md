@@ -33,6 +33,7 @@ Changelog generation `mkchangelog g[enerate]`:
 - group commits by `type` and by `scope` also
 - include unreleased changes section (`mkchangelog generate --unreleased`)
 - custom jinja templates `--template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
+- custom version's header & footer, in `.mkchangelog.d/versions/v1.0.3/header` and `.mkchangelog.d/versions/v1.0.3/footer`
 
 Configuration generation `mkchangelog s[ettings]`:
 - configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)

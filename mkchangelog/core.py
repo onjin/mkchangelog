@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 import semver
@@ -125,8 +126,20 @@ class ChangelogGenerator:
             log_lines = [line for line in log_lines if line.commit_type in commit_types or "all" in commit_types]
         reverts = [line for line in log_lines if line.commit_type == "revert"]
 
+        # TODO: decouple to config service later
+        header = ""
+        header_path = Path(".mkchangelog.d", "versions", from_version.name, "header")
+        footer = ""
+        footer_path = Path(".mkchangelog.d", "versions", from_version.name, "footer")
+        if header_path.exists():
+            with open(header_path, "r") as fh:
+                header = fh.read().strip()
+
+        if footer_path.exists():
+            with open(footer_path, "r") as fh:
+                footer = fh.read().strip()
         if not log_lines:
-            return ChangelogSection(version=from_version)
+            return ChangelogSection(version=from_version, header=header, footer=footer)
 
         def type_name(commit_type: str) -> str:
             return self.settings.commit_types.get(commit_type, commit_type.capitalize())
@@ -139,6 +152,8 @@ class ChangelogGenerator:
             },
             reverts=reverts,
             breaking_changes=breaking_changes,
+            header=header,
+            footer=footer,
         )
         return section
 

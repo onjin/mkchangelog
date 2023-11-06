@@ -65,6 +65,8 @@ class ChangelogSection:
     changes: Dict[CommitType, List[LogLine]] = field(default_factory=dict)
     reverts: List[LogLine] = field(default_factory=list)
     breaking_changes: List[LogLine] = field(default_factory=list)
+    header: str = ""
+    footer: str = ""
 
 
 @dataclass

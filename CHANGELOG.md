@@ -90,6 +90,15 @@
 
 ## v1.0.3 (2023-10-25)
 
+This release had only `Chore` and `Docs` changes,
+so with my config `commit_types_list = fix,feat,refactor` this
+version release notes are empty.
+
+And this message comes from `.mkchangelog.d/versions/v1.0.3/header` file.
+
+Apart from custom version header you can also put footer (under all version changes)
+by creating `.mkchangelog.d/versions/v1.0.3/footer` :).
+
 ## v1.0.2 (2023-10-25)
 
 ### Fixes

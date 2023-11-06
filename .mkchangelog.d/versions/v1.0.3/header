@@ -1,0 +1,5 @@
+This release had only `Chore` and `Docs` changes,
+so with my config `commit_types_list = fix,feat,refactor` this
+version release notes are empty.
+
+And this message comes from `.mkchangelog.d/versions/v1.0.3/header` file.
