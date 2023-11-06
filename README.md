@@ -139,18 +139,18 @@ Default configuration is:
 ```ini
 
 [GENERAL]
-output = CHANGELOG.md
-template = markdown
-commit_limit = 100
-unreleased = False
-unreleased_version = Unreleased
-hide_empty_releases = False
-changelog_title = Changelog
-commit_types_list = fix,feat
-commit_type_default_priority = 10
-tag_prefix = v
+output = CHANGELOG.md                   ; output file
+template = markdown                     ; template to use
+commit_limit = 100                      ; commits limit per release (version)
+unreleased = False                      ; include unreleased changes (HEAD...last_version)
+unreleased_version = Unreleased         ; title of unreleased changes (f.e. next version v3.0.0)
+hide_empty_releases = False             ; hide releases with no gathered commits
+changelog_title = Changelog             ; Changelog title
+commit_types_list = fix,feat            ; list of commit types to include in Changelog
+commit_type_default_priority = 10       ; default priority of commit type, for Changelog ordering
+tag_prefix = v                          ; versions tag prefix to detect/generate git tags
 
-[commit_types]
+[commit_types]                          ; valid commit types (for `--commit-types all`) and their names
 build = Build
 chore = Chore
 ci = CI
@@ -164,7 +164,7 @@ style = Style
 test = Test
 translations = Translations
 
-[commit_types_priorities]
+[commit_types_priorities]               ; custom commit types priorities, for Changelog ordering
 feat = 40
 fix = 30
 refactor = 20
