@@ -10,6 +10,8 @@ from typing import Any, Dict
 
 from git import List
 
+from mkchangelog.utils import strtobool
+
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "GENERAL": {
         "output": "CHANGELOG.md",
@@ -178,7 +180,7 @@ def read_ini_settings(path: str) -> Dict[str, Any]:
                     if key not in section:
                         continue
                     if isinstance(default, bool):
-                        read_val = bool(section[key])
+                        read_val = strtobool(section[key])
                     elif isinstance(default, list):
                         read_val = section[key].split(",")
                     else:

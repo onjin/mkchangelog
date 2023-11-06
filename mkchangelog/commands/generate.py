@@ -44,6 +44,7 @@ class GenerateCommand(Command):
             "--unreleased",
             action="store_true",
             help="include unreleased changes in changelog",
+            default=None,
         )
         parser.add_argument(
             "-uv",
@@ -55,6 +56,7 @@ class GenerateCommand(Command):
             "--hide-empty-releases",
             action="store_true",
             help="skip empty versions",
+            default=None,
         )
         parser.add_argument(
             "--changelog-title",
@@ -78,6 +80,7 @@ class GenerateCommand(Command):
             "--stdout",
             action="store_true",
             help="output changelog to stdout",
+            default=None,
         )
 
     @classmethod
