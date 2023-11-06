@@ -26,21 +26,25 @@ For other parameters changes refer to [usage](#usage) section.
 ## Features:
 
 
-Changelog generation:
-- generate full CHANGELOG.[md,rst,txt,json] `mkchangelog generate --renderer <markdown | rst | txt | json>`
-- limit included commit types `mkchangelog generate --types feat,fix,refactor`
+Changelog generation `mkchangelog g[enerate]`:
+- generate full CHANGELOG.[md,rst,txt,json] `mkchangelog generate --template <markdown | rst | txt | json | path/to/custom/template >`
+- detect verions (releases) by git annotated tags (f.e. `git tag -am v1.0.0 v1.0.0` or use `mkchangelog bump`)
+- limit included commit types `mkchangelog generate --commit-types feat,fix,refactor`
 - group commits by `type` and by `scope` also
-- include unreleased changes section (`mkchangelog generate --include-unreleased`)
-- pass own template by `--renderer template --template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
+- include unreleased changes section (`mkchangelog generate --unreleased`)
+- custom jinja templates `--template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
 
-Configuration generation:
-- configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog config --generate > .mkchangelog`)
+Configuration generation `mkchangelog s[ettings]`:
+- configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)
 
-Commit message helper:
+Commit message helper `mkchangelog c[ommit]`:
 - create `mkchangelog.txt` with proper commit message `mkchangelog commit [--stdout]`, then `git commit -F message.txt`
 
-Bump version:
-- compute and bump next version (using `semver`) `mkchangelog bump`
+Bump version `mkchangelog b[ump]`:
+- compute and bump next version (using `semver`), including generated `CHANGELOG`
+
+
+Example generated changelog: [CHANGELOG.md](CHANGELOG.md)
 
 **Table of Contents**
 
