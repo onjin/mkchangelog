@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (2023-11-06)
+
+### Features
+
+- **renderers:** support custom version's header & footer
+
+### Fixes
+
+- **config:** make argparse store_true not overwrite .mkchangelog settings
+
 ## v2.0.0 (2023-11-05)
 
 ### ⚠ BREAKING CHANGES
