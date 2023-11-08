@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased (2023-11-08)
+
+### Fixes
+
+- **versioning:** support also short versions like `v1` or `v1.1`
+
 ## v2.1.0 (2023-11-06)
 
 ### Features
