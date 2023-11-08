@@ -43,7 +43,7 @@ def create_version(prefix: str, version: str) -> semver.Version:
     Returns:
         semver.Semver - semantic version object
     """
-    return semver.Version.parse(version[len(prefix) :])
+    return semver.Version.parse(version[len(prefix) :], optional_minor_and_patch=True)
 
 
 def strtobool(val: str) -> bool:

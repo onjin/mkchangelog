@@ -32,8 +32,8 @@ Changelog generation `mkchangelog g[enerate]`:
 - limit included commit types `mkchangelog generate --commit-types feat,fix,refactor`
 - group commits by `type` and by `scope` also
 - include unreleased changes section (`mkchangelog generate --unreleased`)
-- custom jinja templates `--template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
-- custom version's header & footer, in `.mkchangelog.d/versions/v1.0.3/header` and `.mkchangelog.d/versions/v1.0.3/footer`
+- custom jinja templates `--template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/) [since v2.0.0]
+- custom version's header & footer, in `.mkchangelog.d/versions/v1.0.3/header` and `.mkchangelog.d/versions/v1.0.3/footer` [since v2.1.0]
 
 Configuration generation `mkchangelog s[ettings]`:
 - configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)
