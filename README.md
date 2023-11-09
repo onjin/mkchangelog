@@ -12,33 +12,23 @@
 
 ---
 
-Use this CLI tool to create a changelog for a project from the git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
-
-
-**NOTE**: Since version `2.0.0` there are some significant changes:
-- `mkchangelog generate` writes to `--output file` as default - use `--stdout` to write to stdout
-- `mkchangelog config` commands was renamed to `mkchangelog settings`
-- options in `.mkchangelog` along with `mkchangelog generate` options were changed to be more consistent, use `mkchangelog settings --generate` to get new config file
-- the `mkchangelog generate` options `--renderer` and `--template` were merged as `--template [renderer name | path to template]`
-
-For other parameters changes refer to [usage](#usage) section.
+The CHANGELOG.md generator from git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
 
 ## Features:
 
+Changelog generator `mkchangelog g[enerate]`:
+- generate changelog from selected commit types (feat, fix, etc)
+- detect verions (releases) by git annotated tags
+- group commits by `type` and by `scope`
+- optionally include unreleased changes section
+- builtin markdown, rst, json output
+- custom jinja templates - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
+- custom version's [header] (https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header) & [footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
 
-Changelog generation `mkchangelog g[enerate]`:
-- generate full CHANGELOG.[md,rst,txt,json] `mkchangelog generate --template <markdown | rst | txt | json | path/to/custom/template >`
-- detect verions (releases) by git annotated tags (f.e. `git tag -am v1.0.0 v1.0.0` or use `mkchangelog bump`)
-- limit included commit types `mkchangelog generate --commit-types feat,fix,refactor`
-- group commits by `type` and by `scope` also
-- include unreleased changes section (`mkchangelog generate --unreleased`)
-- custom jinja templates `--template ./path/to/template.jinja` - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/) [since v2.0.0]
-- custom version's header & footer, in `.mkchangelog.d/versions/v1.0.3/header` and `.mkchangelog.d/versions/v1.0.3/footer` [since v2.1.0]
-
-Configuration generation `mkchangelog s[ettings]`:
+Configuration generator `mkchangelog s[ettings]`:
 - configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)
 
-Commit message helper `mkchangelog c[ommit]`:
+Commit message generator `mkchangelog c[ommit]`:
 - create `mkchangelog.txt` with proper commit message `mkchangelog commit [--stdout]`, then `git commit -F message.txt`
 
 Bump version `mkchangelog b[ump]`:
