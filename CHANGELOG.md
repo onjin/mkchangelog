@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased (2023-11-12)
+
+### Fixes
+
+- **settings:** use commit types from .mkchanelog in `mkchangelog commit` also
+
 ## v2.1.1 (2023-11-08)
 
 ### Fixes
@@ -111,6 +117,10 @@ so with my config `commit_types_list = fix,feat,refactor` this
 version release notes are empty.
 
 And this message comes from `.mkchangelog.d/versions/v1.0.3/header` file.
+
+### Features
+
+- **providers:** Artifical / external commits provider
 
 Apart from custom version header you can also put footer (under all version changes)
 by creating `.mkchangelog.d/versions/v1.0.3/footer` :).

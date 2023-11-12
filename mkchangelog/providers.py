@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import abc
-from typing import Generator, Optional
+import glob
+from pathlib import Path
+from typing import Iterable, List, Optional
 
 from git import Repo
 
-from mkchangelog.models import LogLine, Version
+from mkchangelog.models import Version
 from mkchangelog.utils import create_version
 
 
 class LogProvider(abc.ABC):
     @abc.abstractmethod
-    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Iterable[str]:
         ...
 
 
@@ -68,8 +70,8 @@ class GitVersionsProvider(VersionsProvider):
 
 
 class GitLogProvider(LogProvider):
-    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Generator[LogLine, None, None]:
-        """Return git log parsed using Conventional Commit format.
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Iterable[str]:
+        """Return git log messages.
 
         Args:
             commit_limit (int, optional): max lines to parse
@@ -77,3 +79,28 @@ class GitLogProvider(LogProvider):
         """
         repo = Repo(".")
         return [commit.message for commit in repo.iter_commits(max_count=commit_limit, no_merges=True, rev=rev)]
+
+
+class FilesLogProvider(LogProvider):
+    """Returns commits messages from .mkchangelog.d/versions/vX.X.X/commits/ filders"""
+
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Iterable[str]:  # noqa: ARG002
+        """Return git messages.
+
+        Args:
+            commit_limit (int, optional): max lines to parse
+            rev (str, optional): git rev as branch name or range
+        """
+        messages: List[str] = []
+        if rev:
+            version = rev.split("...")[0]
+            if version == "HEAD":
+                version = "unreleased"
+            path = Path(".") / ".mkchangelog.d" / "versions" / version / "commits"
+        else:
+            path = Path(".") / ".mkchangelog.d" / "versions" / "*" / "commits"
+        files = glob.glob(str(path / "*.txt"))
+        for file in files:
+            with open(file, "r") as fh:
+                messages.append(fh.read().strip("\n"))
+        return messages

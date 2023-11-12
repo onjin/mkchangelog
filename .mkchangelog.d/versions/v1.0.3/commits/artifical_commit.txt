@@ -1,0 +1,7 @@
+feat(providers): Artifical / external commits provider
+
+Allows you to add commits for certain version by adding text files.
+Files should by put in folder:
+- .mkchangelog.d/versions/vX.X.X/commits/
+
+And follow git message format.

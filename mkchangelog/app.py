@@ -6,7 +6,7 @@ from mkchangelog.config import Settings
 from mkchangelog.core import ChangelogGenerator
 from mkchangelog.models import CommitType, Version
 from mkchangelog.parser import GitMessageParser
-from mkchangelog.providers import GitLogProvider, GitVersionsProvider
+from mkchangelog.providers import FilesLogProvider, GitLogProvider, GitVersionsProvider
 from mkchangelog.renderers import RENDERERS, ChangelogRenderer, TemplateChangelogRenderer
 
 
@@ -67,10 +67,13 @@ class Application:
 
 
 def create_application(settings: Settings) -> Application:
-    log_provider = GitLogProvider()
+    log_providers = [GitLogProvider(), FilesLogProvider()]
     versions_provider = GitVersionsProvider(tag_prefix=settings.tag_prefix)
     message_parser = GitMessageParser(settings)
     changelog_generator = ChangelogGenerator(
-        settings=settings, log_provider=log_provider, versions_provider=versions_provider, message_parser=message_parser
+        settings=settings,
+        log_providers=log_providers,
+        versions_provider=versions_provider,
+        message_parser=message_parser,
     )
     return Application(settings=settings, changelog_generator=changelog_generator)

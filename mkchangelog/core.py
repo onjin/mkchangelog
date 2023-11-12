@@ -63,12 +63,12 @@ class ChangelogGenerator:
     def __init__(
         self,
         settings: Settings,
-        log_provider: LogProvider,
+        log_providers: List[LogProvider],
         versions_provider: VersionsProvider,
         message_parser: GitMessageParser,
     ):
         self.settings = settings
-        self.log_provider = log_provider
+        self.log_providers = log_providers
         self.versions_provider = versions_provider
         self.message_parser = message_parser
 
@@ -102,6 +102,12 @@ class ChangelogGenerator:
 
         return sorted_grouped
 
+    def get_log_messages(self, commit_limit: Optional[int] = None, rev: Optional[str] = None) -> List[str]:
+        msgs: List[str] = []
+        for provider in self.log_providers:
+            msgs.extend(provider.get_log(commit_limit=commit_limit, rev=rev))
+        return msgs
+
     def get_changelog_section(
         self,
         *,
@@ -115,7 +121,7 @@ class ChangelogGenerator:
         rev = from_version.name
         if to_version:
             rev = f"{rev}...{to_version.name}"
-        messages: List[str] = list(self.log_provider.get_log(commit_limit=commit_limit, rev=rev))
+        messages = self.get_log_messages(commit_limit=commit_limit, rev=rev)
         log_lines: List[LogLine] = []
         log_lines = self.get_loglines(messages)
 

@@ -24,6 +24,7 @@ Changelog generator `mkchangelog g[enerate]`:
 - builtin markdown, rst, json output
 - custom jinja templates - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
 - custom version's [header] (https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header) & [footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
+- custom commit messages from files, f.e. [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
 
 Configuration generator `mkchangelog s[ettings]`:
 - configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)

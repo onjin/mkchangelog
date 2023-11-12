@@ -241,7 +241,7 @@ class TestChangelogGenerator(object):
     def test_get_changelog_section(self, parameters: ParamsForChangelogSection):
         section = ChangelogGenerator(
             settings=get_settings(),
-            log_provider=MockLogProvider(log=parameters.input_log),
+            log_providers=[MockLogProvider(log=parameters.input_log)],
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(Settings()),
         ).get_changelog_section()
@@ -252,7 +252,7 @@ class TestChangelogGenerator(object):
     def test_get_changelog(self, parameters: ParamsForChangelog):
         generator = changelog = ChangelogGenerator(
             settings=get_settings(),
-            log_provider=MockLogProvider(log=parameters.input_log),
+            log_providers=[MockLogProvider(log=parameters.input_log)],
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
             message_parser=GitMessageParser(Settings()),
         )

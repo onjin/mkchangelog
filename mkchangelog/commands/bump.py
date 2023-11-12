@@ -69,7 +69,7 @@ class BumpCommand(Command):
             rev = "HEAD"
 
         console.print(f"[green]Current version:[/green] {version_name} ({version_date})")
-        commits = app.changelog_generator.log_provider.get_log(
+        commits = app.changelog_generator.get_log_messages(
             commit_limit=options.commit_limit,
             rev=rev,
         )
