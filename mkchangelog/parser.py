@@ -5,6 +5,7 @@ import textwrap
 from collections import defaultdict
 from typing import Any, Dict, Match, Optional
 
+from mkchangelog.config import Settings
 from mkchangelog.models import LogLine
 
 
@@ -12,18 +13,6 @@ class GitMessageParser:
     REFERENCE_ACTIONS = ("Closes", "Relates")
 
     # https://regex101.com/r/zxMWuT/1
-    COMMIT_REGEXP = re.compile(
-        (
-            r"(?P<initial_commit>^Initial commit\.?)"
-            r"|(?P<merge>^Merge [^\r\n]+)"
-            r"|(?P<type>^build|chore|ci|dev|docs|feat|fix|perf|refactor|revert|style|test|translations|¯\\_\\(ツ\\)_\\/¯)"
-            r"(?:\((?P<scope>[\w\.-]+)\))?"
-            r"(?P<breaking>!)?"
-            r": "
-            r"(?P<summary>.+)$"
-        ),
-        re.MULTILINE,
-    )
 
     CC_REGEXP = re.compile(
         r"^(?P<revert>revert: |Revert \")?(?P<type>[a-z0-9]+)(?P<scope>\([a-zA-Z0-9\._-]+\))?: (?P<title>.*)$"
@@ -45,6 +34,21 @@ class GitMessageParser:
         r"(?s)Requires:(?P<requires>.*?)(?:(?:\r*\n){2})",
         re.MULTILINE,
     )
+
+    def __init__(self, settings: Settings):
+        types = "|".join(settings.commit_types.keys())
+        self.COMMIT_REGEXP = re.compile(
+            (
+                r"(?P<initial_commit>^Initial commit\.?)"
+                r"|(?P<merge>^Merge [^\r\n]+)"
+                rf"|(?P<type>^{types}|¯\\_\\(ツ\\)_\\/¯)"
+                r"(?:\((?P<scope>[\w\.-]+)\))?"
+                r"(?P<breaking>!)?"
+                r": "
+                r"(?P<summary>.+)$"
+            ),
+            re.MULTILINE,
+        )
 
     def _get_references_from_msg(self, msg: str) -> dict[str, set[str]]:
         """Get references from commit message

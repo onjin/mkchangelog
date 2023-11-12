@@ -6,7 +6,7 @@ from typing import ClassVar, Dict, Generator, List, Optional
 
 import pytest
 
-from mkchangelog.config import get_settings
+from mkchangelog.config import Settings, get_settings
 from mkchangelog.core import ChangelogGenerator, get_next_version
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
@@ -22,7 +22,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(argnames, [[funcargs[name] for name in argnames] for funcargs in funcarglist])
 
 
-parser = GitMessageParser()
+parser = GitMessageParser(Settings())
 
 
 def log_line(message: str) -> LogLine:
@@ -243,7 +243,7 @@ class TestChangelogGenerator(object):
             settings=get_settings(),
             log_provider=MockLogProvider(log=parameters.input_log),
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
-            message_parser=GitMessageParser(),
+            message_parser=GitMessageParser(Settings()),
         ).get_changelog_section()
         assert isinstance(section, ChangelogSection)
         assert section.version.name == parameters.output_version
@@ -254,7 +254,7 @@ class TestChangelogGenerator(object):
             settings=get_settings(),
             log_provider=MockLogProvider(log=parameters.input_log),
             versions_provider=MockVersionsProvider(versions=parameters.input_versions),
-            message_parser=GitMessageParser(),
+            message_parser=GitMessageParser(Settings()),
         )
         changelog = generator.get_changelog(unreleased=True)
         assert isinstance(changelog, Changelog)

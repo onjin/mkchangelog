@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import textwrap
+from inspect import isclass
+from typing import Union
 
 import pytest
 
+from mkchangelog.config import Settings
 from mkchangelog.parser import GitMessageParser
 
 
@@ -12,22 +15,30 @@ class TestRegexpes:
         "message,matches",
         [
             (
+                "super feature landed",
+                ValueError,
+            ),
+            (
+                "feat: super feature landed",
+                {"commit_type": "feat", "scope": None, "summary": "super feature landed"},
+            ),
+            (
                 "feat(admin): super feature landed",
-                {"type": "feat", "scope": "admin", "summary": "super feature landed"},
+                {"commit_type": "feat", "scope": "admin", "summary": "super feature landed"},
             ),
             (
                 "feat(admin): super feature landed\n\nonly body here",
                 {
-                    "type": "feat",
+                    "commit_type": "feat",
                     "scope": "admin",
-                    "breaking": None,
+                    "breaking_change": False,
                     "summary": "super feature landed",
                 },
             ),
             (
                 "feat(admin): super feature landed\n\nonly footer: here",
                 {
-                    "type": "feat",
+                    "commit_type": "feat",
                     "scope": "admin",
                     "summary": "super feature landed",
                 },
@@ -35,27 +46,28 @@ class TestRegexpes:
             (
                 "fix(some)!: prevent racing of requests",
                 {
-                    "initial_commit": None,
-                    "merge": None,
-                    "type": "fix",
+                    "commit_type": "fix",
                     "scope": "some",
-                    "breaking": "!",
+                    "breaking_change": True,
                     "summary": "prevent racing of requests",
                 },
             ),
             (
                 "fix(parser): stranger chars: `x-explain: 1` `or_=` queries",
-                {"type": "fix", "scope": "parser", "summary": "stranger chars: `x-explain: 1` `or_=` queries"},
+                {"commit_type": "fix", "scope": "parser", "summary": "stranger chars: `x-explain: 1` `or_=` queries"},
             ),
         ],
     )
-    def test_commit_regexp(self, message: str, matches: dict[str, str]):
+    def test_commit_regexp(self, message: str, matches: Union[dict[str, str], Exception]):
         # When - matched against summary regexp
-        result = GitMessageParser.COMMIT_REGEXP.match(message).groupdict()
-
-        # Then - commit is parsed properly
-        for key in matches.keys():
-            assert result[key] == matches[key], result
+        if isclass(matches) and issubclass(matches, Exception):
+            with pytest.raises(matches):
+                result = GitMessageParser(Settings()).parse(message)
+        else:
+            result = GitMessageParser(Settings()).parse(message)
+            # Then - commit is parsed properly
+            for key in matches.keys():
+                assert getattr(result, key) == matches[key], result
 
 
 class TestGitLogParser:
@@ -64,7 +76,7 @@ class TestGitLogParser:
         message = "feat(admin): super feature landed"
 
         # When - matched against summary regexp
-        line = GitMessageParser().parse(message)
+        line = GitMessageParser(Settings()).parse(message)
 
         # Then - commit is parsed properly
         assert line.commit_type == "feat"
@@ -83,7 +95,7 @@ class TestGitLogParser:
         """
         )
         # When - matched against full commit regexp
-        line = GitMessageParser().parse(message)
+        line = GitMessageParser(Settings()).parse(message)
 
         # Then - we got all footer references
         assert line.references == {
@@ -99,7 +111,7 @@ class TestGitLogParser:
         Relates: ISS-223, ISS-232
         """
         # When - matched against full commit regexp
-        line = GitMessageParser().parse(message)
+        line = GitMessageParser(Settings()).parse(message)
 
         # Then - we got all footer references
         assert line.references == {
@@ -118,7 +130,7 @@ class TestGitLogParser:
         """
 
         # When - we get parsed references
-        line = GitMessageParser().parse(message)
+        line = GitMessageParser(Settings()).parse(message)
 
         # Then - we get dict with actions as keys and refs as values list
         assert sorted(line.references["Closes"]) == ["ISS-123", "ISS-333", "ISS-432"]
@@ -158,7 +170,7 @@ class TestGitLogParser:
     def test_gather_breaking_changes(self, message: str, changes: list[str]):
         # Given - breaking changes in footer
         # When - matched against regexp
-        line = GitMessageParser().parse(message)
+        line = GitMessageParser(Settings()).parse(message)
 
         # Then - we got all rows
         assert line.breaking_changes == changes

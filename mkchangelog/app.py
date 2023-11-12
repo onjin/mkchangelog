@@ -69,7 +69,7 @@ class Application:
 def create_application(settings: Settings) -> Application:
     log_provider = GitLogProvider()
     versions_provider = GitVersionsProvider(tag_prefix=settings.tag_prefix)
-    message_parser = GitMessageParser()
+    message_parser = GitMessageParser(settings)
     changelog_generator = ChangelogGenerator(
         settings=settings, log_provider=log_provider, versions_provider=versions_provider, message_parser=message_parser
     )

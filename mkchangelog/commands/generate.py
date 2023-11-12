@@ -77,6 +77,7 @@ class GenerateCommand(Command):
             type=str,
         )
         parser.add_argument(
+            "-s",
             "--stdout",
             action="store_true",
             help="output changelog to stdout",
