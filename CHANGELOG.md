@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased (2023-11-12)
+## Unreleased (2023-11-21)
+
+### Features
+
+- **providers:** add `FileLogProvider` to add custom/external commits from files, per version
 
 ### Fixes
 
