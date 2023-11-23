@@ -14,118 +14,68 @@
 
 The CHANGELOG.md generator from git log using the [`conventional commits`](https://www.conventionalcommits.org/en/v1.0.0/) scheme.
 
-## Features:
-
-Changelog generator `mkchangelog g[enerate]`:
-- generate changelog from selected commit types (feat, fix, etc)
-- detect verions (releases) by git annotated tags
-- group commits by `type` and by `scope`
-- optionally include unreleased changes section
-- builtin markdown, rst, json output
-- custom jinja templates - check [internal templates](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/)
-- custom version's [header] (https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header) & [footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
-- custom commit messages from files, f.e. [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
-
-Configuration generator `mkchangelog s[ettings]`:
-- configure `mkchangelog` using `.mkchangelog` INI file (`mkchangelog settings --generate > .mkchangelog`)
-
-Commit message generator `mkchangelog c[ommit]`:
-- create `mkchangelog.txt` with proper commit message `mkchangelog commit [--stdout]`, then `git commit -F message.txt`
-
-Bump version `mkchangelog b[ump]`:
-- compute and bump next version (using `semver`), including generated `CHANGELOG`
-
-
 Example generated changelog: [CHANGELOG.md](CHANGELOG.md)
+
 
 **Table of Contents**
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [Configuration](#configuration)
+- [Features](#features)
 - [License](#license)
 
 ## Installation
 
 ```console
 pip install mkchangelog
-pip install mkchangelog[colors]  # for console colorized output
 ```
 
 ## Usage
 
 The list of versions is taken from list of signed git tags detected by prefix (default `v`, f.e. `v1.3.4`).
 
+#### Generate changelog
 To generate changelog for current and all previous versions (signed tags) to CHAGELOG.md (default):
 
 ```console
-mkchangelog generate [--stdout] [--template <markdown | rst | json | ./tmpl.jinja >]
+$ mkchangelog generate       # Creates CHANGELOG.md
+$ mkchangelog g              # Creates CHANGELOG.md
+$ mkchangelog g --stdout     # Prints changelog to stdout
+$ mkchangelog g --help       # Prints help for generate command
 ```
+
+#### Generate commit message
 
 ```console
-❯ mkchangelog generate --help
-usage: mkchangelog generate [-h] [-o OUTPUT] [-t TEMPLATE] [-l COMMIT_LIMIT] [-u] [-uv UNRELEASED_VERSION] [--hide-empty-releases]
-                            [--changelog-title CHANGELOG_TITLE] [--tag-prefix TAG_PREFIX] [--commit-types COMMIT_TYPES_LIST [COMMIT_TYPES_LIST ...]]
-                            [--stdout]
-
-options:
-  -h, --help            show this help message and exit
-  -o OUTPUT, --output OUTPUT
-                        output file, default: CHANGELOG.md
-  -t TEMPLATE, --template TEMPLATE
-                        specify template to use [markdown, rst, json], or path to your template default: markdown
-  -l COMMIT_LIMIT, --commit-limit COMMIT_LIMIT
-                        number of commits to display per release, default: 100
-  -u, --unreleased      include unreleased changes in changelog
-  -uv UNRELEASED_VERSION, --unreleased-version UNRELEASED_VERSION
-                        use specified version as unreleased release; default 'Unreleased'
-  --hide-empty-releases
-                        skip empty versions
-  --changelog-title CHANGELOG_TITLE
-                        changelog title, default 'Changelog'
-  --tag-prefix TAG_PREFIX
-                        version tag prefix; default 'v'
-  --commit-types COMMIT_TYPES_LIST [COMMIT_TYPES_LIST ...]
-                        f.e. feat,fix,refactor, all - for all convigured; default from 'commit_types_list' settings
-  --stdout              output changelog to stdout
+$ mkchangelog commit         # Generates message.txt
+$ mkchangelog c              # Generates message.txt
+$ git commit -F message.txt  # Use message.txt as commit message
 ```
 
-To generate commit message use:
+#### Bump version
+
+Interactive tool to:
+- generate changelog
+- calculate next version from feat/fix/breaking changes commits
+- commit changelog and tag version
 
 ```console
-$ mkchangelog commit --stdout
-Git Commit Format: type(scope): summary
-
-Commit Type [build,chore,ci,dev,docs,FEAT,fix,perf,refactor,style,test,translations]: feat
-Scope: (optional): commands
-Summary line: add `mkchangelog commit` command to generate proper commit message
-Is breaking change? [y/N]
-Long description (body): The message be displayed at stdout by passing `--stdout` parameter. Otherwise will be saved as `message.txt` file.
----
-feat(commands): add `mkchangelog commit` command to generate proper commit message
-
-The message be displayed at stdout by passing `--stdout` parameter. Otherwise will be saved as `message.txt` file.
----
+$ mkchangelog bump           # Bumps next version
+$ mkchangelog b              # Bumps next version
 ```
 
-Experimental commands:
-
-Interactive tool to generate changelog, bump version, commit changelog and tag version:
-
-```console
-mkchangelog bump ## The 'bump' commands gets same parameters as 'generate'
-```
-
-## Configuration
+#### Manage configuration
 
 You can change default configuration using `.mkchangelog` (ini format) file in current directory.
 
 ```console
-mkchangelog settings --generate  # generates default .mkchangelog file
+$ mkchangelog settings       # Shows current config as jon
+$ mkchangelog s              # Shows current config as jon
+$ mkchangelog s --generate   # Prints default config ini file
 ```
 
-```console
-mkchangelog settings # shows current default settings merged with .mkchangelog settings
-```
+## Configuration
 
 Default configuration is:
 ```ini
@@ -161,6 +111,78 @@ feat = 40
 fix = 30
 refactor = 20
 ```
+
+## Features
+
+#### Creates changelog from git log
+
+- the list of releases is created from list of annotated git tags matching configured `tag_prefix`.
+- the unreleased changes are included if `unreleased` is `true`.
+- from git log messages matching configured `commit_types` are parsed and grouped by the type.
+- certain groups (types) are sorted by configured `commit_types_priorities`.
+- only configured `commit_types_list` types are rendered, if not `--commit-types [type,type, | all]` was provided
+
+#### Includes additional git commits from text files
+
+- additional commit files (`*.txt`) can be put at `.mkchangelog.d/versions/<version>/commits/` directory
+
+For example:
+ - [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
+
+#### Built-in templates
+
+The `mkchangelog` includes a few builtin changelog output formats
+
+```console
+$ mkchangelog g --template markdown
+$ mkchangelog g --template rst
+$ mkchangelog g --template json
+```
+
+#### Custom `header` and `footer` per version [for built-in templates]
+
+The `header` and `footer` files are included from files:
+- .mkchangelog.d/versions/<version>/header
+- .mkchangelog.d/versions/<version>/footer
+
+For example:
+- [v1.0.3/header](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header)
+- [v1.0.3/footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
+
+#### Custom [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates
+
+```console
+$ mkchangelog g --template ./path/to/template.jinja
+```
+
+#### Your own commit types
+
+The `commit_types` can be fully customized by `.mkchangelog` file.
+
+```ini
+[GENERAL]
+commit_types_list = awesome
+hide_empty_releases = True
+
+[commit_types]
+awesome = Best change
+sad = Had to write it
+not_sure = Works but why?
+
+[commit_types_priorities]
+awesome = 40
+sad = 30
+not_sure = 20
+
+```
+
+```console
+$ mkchangelog g --commit_types all
+$ mdless CHANGELOG.md
+```
+![image](https://github.com/onjin/mkchangelog/assets/44516/33f9b6dd-2860-437e-98be-d3a2e1819223)
+
+
 
 ## Contributing
 
