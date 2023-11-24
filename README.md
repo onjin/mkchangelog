@@ -35,7 +35,7 @@ pip install mkchangelog
 
 The list of versions is taken from list of signed git tags detected by prefix (default `v`, f.e. `v1.3.4`).
 
-#### Generate changelog
+### Generate changelog
 To generate changelog for current and all previous versions (signed tags) to CHAGELOG.md (default):
 
 ```console
@@ -45,7 +45,7 @@ $ mkchangelog g --stdout     # Prints changelog to stdout
 $ mkchangelog g --help       # Prints help for generate command
 ```
 
-#### Generate commit message
+### Generate commit message
 
 ```console
 $ mkchangelog commit         # Generates message.txt
@@ -53,7 +53,7 @@ $ mkchangelog c              # Generates message.txt
 $ git commit -F message.txt  # Use message.txt as commit message
 ```
 
-#### Bump version
+### Bump version
 
 Interactive tool to:
 - generate changelog
@@ -65,7 +65,7 @@ $ mkchangelog bump           # Bumps next version
 $ mkchangelog b              # Bumps next version
 ```
 
-#### Manage configuration
+### Manage configuration
 
 You can change default configuration using `.mkchangelog` (ini format) file in current directory.
 
@@ -114,7 +114,7 @@ refactor = 20
 
 ## Features
 
-#### Creates changelog from git log
+### Creates changelog from git log
 
 - the list of releases is created from list of annotated git tags matching configured `tag_prefix`.
 - the unreleased changes are included if `unreleased` is `true`.
@@ -122,14 +122,14 @@ refactor = 20
 - certain groups (types) are sorted by configured `commit_types_priorities`.
 - only configured `commit_types_list` types are rendered, if not `--commit-types [type,type, | all]` was provided
 
-#### Includes additional git commits from text files
+### Includes additional git commits from text files
 
 - additional commit files (`*.txt`) can be put at `.mkchangelog.d/versions/<version>/commits/` directory
 
 For example:
  - [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
 
-#### Built-in templates
+### Built-in templates
 
 The `mkchangelog` includes a few builtin changelog output formats
 
@@ -139,7 +139,7 @@ $ mkchangelog g --template rst
 $ mkchangelog g --template json
 ```
 
-#### Custom `header` and `footer` per version [for built-in templates]
+### Custom `header` and `footer` per version [for built-in templates]
 
 The `header` and `footer` files are included from files:
 - .mkchangelog.d/versions/<version>/header
@@ -149,13 +149,13 @@ For example:
 - [v1.0.3/header](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header)
 - [v1.0.3/footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
 
-#### Custom [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates
+### Custom [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates
 
 ```console
 $ mkchangelog g --template ./path/to/template.jinja
 ```
 
-#### Your own commit types
+### Your own commit types
 
 The `commit_types` can be fully customized by `.mkchangelog` file.
 
