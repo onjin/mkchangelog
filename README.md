@@ -155,6 +155,10 @@ For example:
 $ mkchangelog g --template ./path/to/template.jinja
 ```
 
+Refer to built-in templates for examples:
+- [markdown.jinja2](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/markdown.jinja2)
+- [rst.jinja2](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/rst.jinja2)
+
 ### Your own commit types
 
 The `commit_types` can be fully customized by `.mkchangelog` file.
