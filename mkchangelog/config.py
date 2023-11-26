@@ -24,6 +24,7 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
         "commit_types_list": ["fix", "feat"],
         "commit_type_default_priority": 10,
         "tag_prefix": "v",
+        "raise_exceptions": False,
     },
     "commit_types": {
         "build": "Build",
@@ -86,6 +87,9 @@ class Settings:
     # used for `all` to check valid types, and to provide
     # header's names - used in ChangelogRenderers
     commit_types: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types"])
+
+    # raise exceptions on command's errors
+    raise_exceptions: bool = DEFAULT_SETTINGS["GENERAL"]["raise_exceptions"]
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any], *, strict: bool = True) -> Settings:

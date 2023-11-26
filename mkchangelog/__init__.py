@@ -5,7 +5,10 @@
 import argparse
 import logging
 import os
+import sys
 from typing import Optional, Sequence
+
+from rich.console import Console
 
 from mkchangelog.app import create_application
 from mkchangelog.commands.bump import BumpCommand
@@ -52,6 +55,12 @@ def main(argv: Optional[Sequence[str]] = None):
         help="verbosity level, 1 - (ERROR, default), 2 - (INFO) or 3 - (DEBU)",
         choices=[1, 2, 3],
     )
+    parser.add_argument(
+        "-e",
+        "--raise-exceptions",
+        action="store_true",
+        help="raise exceptions instead of printing only message to stderr",
+    )
 
     subparsers = parser.add_subparsers(title="command", dest="command")
 
@@ -64,6 +73,13 @@ def main(argv: Optional[Sequence[str]] = None):
     if args.command:
         add_stdout_handler(int(args.verbosity))
         app = create_application(settings)
-        args.command(args, app)
+        try:
+            args.command(args, app)
+        except Exception as exc:
+            if args.raise_exceptions:
+                raise
+            else:
+                console = Console(file=sys.stderr)
+                console.print(f"[red]{exc.__class__.__name__}: {exc}")
     else:
         parser.print_help()
