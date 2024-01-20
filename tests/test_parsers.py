@@ -123,18 +123,60 @@ class TestGitLogParser:
         # Given - msg with references
         message = """feat(admin): asdfasdfsdf
 
-        Closes: ISS-123, ISS-432
-        Relates: ISS-223, ISS-232
-        Closes: ISS-333
-        Relates: ISS-444
+        Closes: C-001, C-002
+        Close: C-003,C-004
+        Closed: C-005,C-006
+        Fixes: F-001, F-002
+        Fix: F-003,F-004
+        Fixed: F-005,F-006
+        Resolves: RS-001, RS-002
+        Resolve: RS-003,RS-004
+        Resolved: RS-005,RS-006, RS-007
+        Relates: R-001, R-002
+        Relate: R-003,R-004
+        Related: R-005,R-006, R-007
         """
 
         # When - we get parsed references
         line = GitMessageParser(Settings()).parse(message)
 
         # Then - we get dict with actions as keys and refs as values list
-        assert sorted(line.references["Closes"]) == ["ISS-123", "ISS-333", "ISS-432"]
-        assert sorted(line.references["Relates"]) == ["ISS-223", "ISS-232", "ISS-444"]
+        assert line.references is not None
+        assert set(line.references.keys()) == {"Closes", "Relates", "Fixes", "Resolves"}
+        assert sorted(line.references["Closes"]) == [
+            "C-001",
+            "C-002",
+            "C-003",
+            "C-004",
+            "C-005",
+            "C-006",
+        ]
+        assert sorted(line.references["Relates"]) == [
+            "R-001",
+            "R-002",
+            "R-003",
+            "R-004",
+            "R-005",
+            "R-006",
+            "R-007",
+        ]
+        assert sorted(line.references["Fixes"]) == [
+            "F-001",
+            "F-002",
+            "F-003",
+            "F-004",
+            "F-005",
+            "F-006",
+        ]
+        assert sorted(line.references["Resolves"]) == [
+            "RS-001",
+            "RS-002",
+            "RS-003",
+            "RS-004",
+            "RS-005",
+            "RS-006",
+            "RS-007",
+        ]
 
     @pytest.mark.parametrize(
         "message,changes",

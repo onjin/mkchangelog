@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (2024-01-20)
+
+### Features
+
+- **parser:** render footer references in text format\n\nCloses: #7
+
+### Fixes
+
+- **commands:** by default print just message on errors, use `-e/--raise-exceptions` to raise exception instead
+
 ## v2.2.0 (2023-11-23)
 
 ### Features

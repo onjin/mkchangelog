@@ -45,6 +45,12 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
         "fix": 30,
         "refactor": 20,
     },
+    "reference_aliases": {
+        "Closes": ["Close", "Closed"],
+        "Fixes": ["Fix", "Fixed"],
+        "Resolves": ["Resolve", "Resolved"],
+        "Relates": ["Relate", "Related"],
+    },
 }
 
 
@@ -87,6 +93,9 @@ class Settings:
     # used for `all` to check valid types, and to provide
     # header's names - used in ChangelogRenderers
     commit_types: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types"])
+
+    # used to gather references f.e. Fixed, Fix, and Fixes under single Fix key
+    reference_aliases: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["reference_aliases"])
 
     # raise exceptions on command's errors
     raise_exceptions: bool = DEFAULT_SETTINGS["GENERAL"]["raise_exceptions"]
@@ -162,7 +171,7 @@ def generate_config() -> configparser.ConfigParser:
             str_value = str(value)
         config.set("GENERAL", key, str_value)
 
-    for section_name in ["commit_types", "commit_types_priorities"]:
+    for section_name in ["commit_types", "commit_types_priorities", "reference_aliases"]:
         config.add_section(section_name)
         for key, value in DEFAULT_SETTINGS[section_name].items():
             config.set(section_name, key, str(value))

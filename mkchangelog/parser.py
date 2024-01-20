@@ -10,8 +10,6 @@ from mkchangelog.models import LogLine
 
 
 class GitMessageParser:
-    REFERENCE_ACTIONS = ("Closes", "Relates")
-
     # https://regex101.com/r/zxMWuT/1
 
     CC_REGEXP = re.compile(
@@ -49,6 +47,7 @@ class GitMessageParser:
             ),
             re.MULTILINE,
         )
+        self.REF_ALIASES = settings.reference_aliases
 
     def _get_references_from_msg(self, msg: str) -> dict[str, set[str]]:
         """Get references from commit message
@@ -72,6 +71,9 @@ class GitMessageParser:
         refs: dict[str, set[str]] = defaultdict(set)
         for line in result:
             action, value = line
+            for main, aliases in self.REF_ALIASES.items():
+                if action in aliases:
+                    action = main
             for ref in value.split(","):
                 refs[action].add(ref.strip())
         return dict(refs)
