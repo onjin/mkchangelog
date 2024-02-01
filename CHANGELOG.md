@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased (2024-02-01)
+## v2.3.1 (2024-02-01)
+
+### Fixes
+
+- **templates:** Add missing new line between items
+
+## v2.3.0 (2024-01-20)
 
 ### Features
 
