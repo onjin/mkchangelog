@@ -58,12 +58,10 @@ class ChangelogRenderer(BaseChangelogRenderer, abc.ABC):
         self.settings = settings
 
     @abc.abstractmethod
-    def render(self, changelog: Changelog) -> Any:
-        ...
+    def render(self, changelog: Changelog) -> Any: ...
 
     @abc.abstractmethod
-    def render_section(self, section: ChangelogSection) -> Any:
-        ...
+    def render_section(self, section: ChangelogSection) -> Any: ...
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):

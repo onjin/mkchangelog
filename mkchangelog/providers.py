@@ -13,18 +13,15 @@ from mkchangelog.utils import create_version
 
 class LogProvider(abc.ABC):
     @abc.abstractmethod
-    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Iterable[str]:
-        ...
+    def get_log(self, commit_limit: int = 1000, rev: Optional[str] = None) -> Iterable[str]: ...
 
 
 class VersionsProvider(abc.ABC):
     @abc.abstractmethod
-    def get_versions(self, limit: Optional[int] = None) -> list[Version]:
-        ...
+    def get_versions(self, limit: Optional[int] = None) -> list[Version]: ...
 
     @abc.abstractmethod
-    def get_last_version(self) -> Optional[Version]:
-        ...
+    def get_last_version(self) -> Optional[Version]: ...
 
 
 class GitVersionsProvider(VersionsProvider):
