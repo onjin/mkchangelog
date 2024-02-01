@@ -22,6 +22,7 @@
 
 {% for line in changes %}
 * {% if line.scope %}**{{ line.scope }}:** {% endif %}{{ line.summary }} {% for ref,keys in line.references.items() %}{{ref}}: {{",".join(keys)}}{% endfor %}
+
 {% endfor %}
 
 {% endfor %}
