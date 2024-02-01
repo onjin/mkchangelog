@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.2 (2024-02-01)
+
+### Fixes
+
+- **python:** drop support for *Python 3.7*
+
 ## v2.3.1 (2024-02-01)
 
 ### Fixes
