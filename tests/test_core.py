@@ -54,7 +54,7 @@ GIT_LOG = [
     "docs: add usage info, and fix github links",
     "chore(build): fix hatch env matrix",
     "chore(changelog): write CHANGELOG.md for version v1.0.2",
-    "fix(core): make project working with python 3.7 and 3.12",
+    "fix(core): make project working with python 3.8 and 3.12",
     "chore: bump package version",
     "chore: remove obsolete CHANGELOG.txt in favor of generated CHANGELOG.md",
     "chore(changelog): write CHANGELOG.md for version v1.0.1",
@@ -220,7 +220,7 @@ class TestChangelogGenerator(object):
                                 [
                                     "fix: upgrade deprecated sermer.parse",
                                     "fix(bump): proper Version sorting",
-                                    "fix(core): make project working with python 3.7 and 3.12",
+                                    "fix(core): make project working with python 3.8 and 3.12",
                                 ]
                             ),
                             "Refactors": log_lines(
