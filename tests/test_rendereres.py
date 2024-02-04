@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from mkchangelog.config import Settings, get_settings
 from mkchangelog.models import Changelog, ChangelogSection, Version
 from mkchangelog.parser import GitMessageParser
-from mkchangelog.renderers import TextChangelogRenderer
+from mkchangelog.renderers import TextChangelogRenderer, regex_replace
 
 
 class TestTextRenderer:
@@ -25,3 +27,23 @@ class TestTextRenderer:
 
         assert "> ⚠ BREAKING CHANGES\n" in rendered
         assert "- bad news for compatibility\n" in rendered
+
+
+@pytest.mark.parametrize(
+    "value,pattern,replacement,ignorecase,multiline,expected",
+    (
+        ("line with #12 issue ref", r"#(\d+)", "#ISSUE-\\1", False, False, "line with #ISSUE-12 issue ref"),
+        ("localhost:80", "^(?P<host>.+):(?P<port>\\d+)$", "\\g<host>, \\g<port>", False, False, "localhost, 80"),
+        ("some CASE1 test", r"[a-z]", "x", False, False, "xxxx CASE1 xxxx"),
+        ("some CASE2 test", r"[a-z]", "x", True, False, "xxxx xxxx2 xxxx"),
+    ),
+)
+def test_regex_replace_filter(  # noqa: #FBT001
+    value: str,
+    pattern: str,
+    replacement: str,
+    ignorecase: bool,  # noqa: FBT001
+    multiline: bool,  # noqa: FBT001
+    expected: str,
+):
+    assert regex_replace(value, pattern, replacement, ignorecase, multiline) == expected

@@ -139,6 +139,11 @@ $ mkchangelog g --template rst
 $ mkchangelog g --template json
 ```
 
+Apart from builtin jinja2 filter there are additional custom filters:
+
+- `underline` - f.e. `{{ changelog.title | underline('=') }}`
+- `regex_replace` - f.e. `{{ "line with #12 issue ref" | regex_replace("#(\d+)", "#ISSUE-\\1") }}`
+
 ### Custom `header` and `footer` per version [for built-in templates]
 
 The `header` and `footer` files are included from files:

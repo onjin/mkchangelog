@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import dataclasses
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Type
@@ -12,6 +13,7 @@ from git import Optional
 from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 
 from mkchangelog.config import Settings
+from mkchangelog.exceptions import MKChangelogTemplateError
 from mkchangelog.models import Changelog, ChangelogSection
 
 
@@ -23,6 +25,31 @@ class BaseChangelogRenderer:
             key=lambda t: self.settings.commit_types_priorities.get(t, self.settings.commit_type_default_priority),
             reverse=True,
         )
+
+
+def regex_replace(
+    value: str = "",
+    pattern: str = "",
+    replacement: str = "",
+    ignorecase: bool = False,  # noqa: FBT001, FBT002
+    multiline: bool = False,  # noqa: FBT001, FBT002
+    count: int = 0,
+    mandatory_count: int = 0,
+):
+    """Perform a `re.sub` returning a string"""
+
+    flags = 0
+    if ignorecase:
+        flags |= re.I
+    if multiline:
+        flags |= re.M
+    _re = re.compile(pattern, flags=flags)
+    (output, subs) = _re.subn(replacement, value, count=count)
+    if mandatory_count and mandatory_count != subs:
+        raise MKChangelogTemplateError(
+            "'%s' should match %d times, but matches %d times in '%s'" % (pattern, mandatory_count, count, value)
+        )
+    return output
 
 
 class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
@@ -43,6 +70,7 @@ class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
 
         self.env = Environment(loader=loader, autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True)
         self.env.filters["underline"] = lambda line, char: f"{line}\n{ char * len(line)}"
+        self.env.filters["regex_replace"] = regex_replace
 
     def render(self, changelog: Changelog) -> Any:
         template = self.env.get_template(self.template)
