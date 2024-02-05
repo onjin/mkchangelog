@@ -16,7 +16,6 @@ The CHANGELOG.md generator from git log using the [`conventional commits`](https
 
 Example generated changelog: [CHANGELOG.md](CHANGELOG.md)
 
-
 **Table of Contents**
 
 - [Installation](#installation)
@@ -36,6 +35,7 @@ pip install mkchangelog
 The list of versions is taken from list of signed git tags detected by prefix (default `v`, f.e. `v1.3.4`).
 
 ### Generate changelog
+
 To generate changelog for current and all previous versions (signed tags) to CHAGELOG.md (default):
 
 ```console
@@ -56,6 +56,7 @@ $ git commit -F message.txt  # Use message.txt as commit message
 ### Bump version
 
 Interactive tool to:
+
 - generate changelog
 - calculate next version from feat/fix/breaking changes commits
 - commit changelog and tag version
@@ -78,6 +79,7 @@ $ mkchangelog s --generate   # Prints default config ini file
 ## Configuration
 
 Default configuration is:
+
 ```ini
 
 [GENERAL]
@@ -127,7 +129,8 @@ refactor = 20
 - additional commit files (`*.txt`) can be put at `.mkchangelog.d/versions/<version>/commits/` directory
 
 For example:
- - [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
+
+- [v1.0.3/commits](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/commits/)
 
 ### Built-in templates
 
@@ -139,30 +142,63 @@ $ mkchangelog g --template rst
 $ mkchangelog g --template json
 ```
 
-Apart from builtin jinja2 filter there are additional custom filters:
-
-- `underline` - f.e. `{{ changelog.title | underline('=') }}`
-- `regex_replace` - f.e. `{{ "line with #12 issue ref" | regex_replace("#(\d+)", "#ISSUE-\\1") }}`
-
 ### Custom `header` and `footer` per version [for built-in templates]
 
 The `header` and `footer` files are included from files:
+
 - .mkchangelog.d/versions/<version>/header
 - .mkchangelog.d/versions/<version>/footer
 
 For example:
+
 - [v1.0.3/header](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/header)
 - [v1.0.3/footer](https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/versions/v1.0.3/footer)
 
 ### Custom [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates
 
+You can create your own templates and pass them by `--template` parameter of `mkchangelog generate`
+or set it in `.mkchangelog` configuration file.
+
+**Using configuration file**
+
+```dosini
+[GENERAL]
+...
+# put `custom_template.jinja` in `.mkchangelog.d/templates/
+template = custom_template.jinja
+
+# or specify full path to template
+template = ./path/to/template.jinja
+...
+```
+
+**Using `--template` parameter\***
+
 ```console
+# put `custom_template.jinja` in `.mkchangelog.d/templates/
+$ mkchangelog g --template custom_template.jinja
+
+# or specify full path to template
 $ mkchangelog g --template ./path/to/template.jinja
 ```
 
 Refer to built-in templates for examples:
+
 - [markdown.jinja2](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/markdown.jinja2)
 - [rst.jinja2](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/templates/rst.jinja2)
+
+### Template filters
+
+Apart from builtin jinja2 filter there are additional custom filters:
+
+- `underline` - f.e. `{{ changelog.title | underline('=') }}`
+- `regex_replace` - f.e. `{{ "line with #12 issue ref" | regex_replace("#(\d+)", "#ISSUE-\\1") }}`
+
+You can create and register your own filters using **.mkchangelog.d/hooks.py** file.
+
+Example implementation of hooks:
+
+- https://github.com/onjin/mkchangelog/blob/master/.mkchangelog.d/hooks.py
 
 ### Your own commit types
 
@@ -189,9 +225,51 @@ not_sure = 20
 $ mkchangelog g --commit_types all
 $ mdless CHANGELOG.md
 ```
+
 ![image](https://github.com/onjin/mkchangelog/assets/44516/33f9b6dd-2860-437e-98be-d3a2e1819223)
 
+### Plugins / hooks system
 
+You can use hooks system to extend mkchangelog functionality.
+All hooks are loaded from `.mkchangelog.d/hooks.py` file which must be a valid python module.
+
+You can check the specification for available hooks at [hookspecs.py](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/hookspecs.py) file.
+The mkchangelog built-in hooks are implemented at [lib.py](https://github.com/onjin/mkchangelog/blob/master/mkchangelog/lib.py) file.
+
+**Available hooks**:
+
+- provide_template_filters - returns dictionary of jinja2 filters,
+- provide_changelog_loglines_filter - returns functions which filters list of `LogLine` - you can use it to filter out f.e. some scopes
+
+**Example .mkchangelog.d/hooks.py**
+
+```python
+
+from __future__ import annotations
+
+import random
+from typing import Any, Callable, Dict, List
+
+from mkchangelog.config import Settings
+from mkchangelog.lib import hookimpl
+
+
+def fancylize(s):
+    return "".join([c.lower() if random.randint(0, 1) else c.upper() for c in s])
+
+
+@hookimpl
+def provide_template_filters(settings: Settings) -> Dict[str, Callable[[Any], str]]:  # noqa
+    """Add 'fancylize' jinja2 template filter"""
+    return {"fancylize": fancylize}
+
+
+@hookimpl
+def provide_changelog_loglines_filter(settings: Settings) -> Callable[[List[LogLine]], List[LogLine]]:
+    """Hide lines with scope 'hidden_scope'"""
+    return lambda loglines: [line for line in loglines if line.scope != "hidden_scope"]
+
+```
 
 ## Contributing
 

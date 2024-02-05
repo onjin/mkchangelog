@@ -1,6 +1,6 @@
 [GENERAL]
 output = CHANGELOG.md
-template = markdown
+template = my_markdown.jinja2
 commit_limit = 100
 unreleased = True
 unreleased_version = Unreleased

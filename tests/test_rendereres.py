@@ -3,9 +3,10 @@ from __future__ import annotations
 import pytest
 
 from mkchangelog.config import Settings, get_settings
+from mkchangelog.lib import regex_replace_filter
 from mkchangelog.models import Changelog, ChangelogSection, Version
 from mkchangelog.parser import GitMessageParser
-from mkchangelog.renderers import TextChangelogRenderer, regex_replace
+from mkchangelog.renderers import TextChangelogRenderer
 
 
 class TestTextRenderer:
@@ -46,4 +47,4 @@ def test_regex_replace_filter(  # noqa: #FBT001
     multiline: bool,  # noqa: FBT001
     expected: str,
 ):
-    assert regex_replace(value, pattern, replacement, ignorecase, multiline) == expected
+    assert regex_replace_filter(value, pattern, replacement, ignorecase, multiline) == expected

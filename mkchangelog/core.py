@@ -5,7 +5,7 @@ from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional
 
 import semver
 
@@ -66,11 +66,13 @@ class ChangelogGenerator:
         log_providers: List[LogProvider],
         versions_provider: VersionsProvider,
         message_parser: GitMessageParser,
+        log_filters: List[Callable[[List[LogLine]], List[LogLine]]] | None = None,
     ):
         self.settings = settings
         self.log_providers = log_providers
         self.versions_provider = versions_provider
         self.message_parser = message_parser
+        self.log_filters = log_filters
 
     def get_loglines(self, commits: list[str], *, strict: bool = False) -> List[LogLine]:
         lines: list[LogLine] = []
@@ -80,6 +82,9 @@ class ChangelogGenerator:
             except ValueError:
                 if strict:
                     raise
+        if self.log_filters:
+            for log_filter in self.log_filters:
+                lines = log_filter(lines)
         return lines
 
     def group_commits_by_type(self, commits: Iterable[LogLine]) -> Dict[str, Iterable[LogLine]]:

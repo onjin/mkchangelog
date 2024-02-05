@@ -1,0 +1,34 @@
+# {{ changelog.title }}
+
+{{ 'Demo of custom "fancylize" filter ' | fancylize}}
+
+{% for section in changelog.sections %}
+## {{ section.version.name }} ({{ section.version.date.date().isoformat() }})
+
+{% if section.header %}
+{{ section.header }}
+
+{% endif %}
+{% if section.breaking_changes %}
+### ⚠ BREAKING CHANGES
+{% for line in section.breaking_changes %}
+{% for change in line.breaking_changes %}
+- {{ change }}
+{% endfor %}
+{% endfor %}
+
+{% endif %}
+{% for commit_type, changes in section.changes.items() %}
+### {{ commit_type }}
+
+{% for line in changes %}
+- {% if line.scope %}**{{ line.scope }}:** {% endif %}{{ line.summary }} {% for ref,keys in line.references.items() %}{{ref}}: {{",".join(keys)}}{% endfor %}
+
+{% endfor %}
+
+{% endfor %}
+{% if section.footer %}
+{{ section.footer }}
+
+{% endif %}
+{% endfor %}
