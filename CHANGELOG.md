@@ -1,8 +1,12 @@
 # Changelog
 
-DeMo Of CusToM "FaNcyLIze" FILter
+DEmo OF CUSTOm "FancyLIzE" fILtEr
 
-## Unreleased (2024-02-05)
+## v2.4.0 (2024-02-05)
+
+### Features
+
+- **hooks:** add hooks system to expand mkchangelog features using python code
 
 ### Fixes
 
