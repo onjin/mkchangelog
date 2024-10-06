@@ -12,7 +12,7 @@ import semver
 from mkchangelog.config import Settings
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
-from mkchangelog.providers import LogProvider, VersionsProvider
+from mkchangelog.providers import LogProvider, LogProviderOptions, VersionsProvider
 from mkchangelog.utils import TZ_INFO, create_version
 
 if TYPE_CHECKING:
@@ -110,7 +110,11 @@ class ChangelogGenerator:
     def get_log_messages(self, commit_limit: Optional[int] = None, rev: Optional[str] = None) -> List[str]:
         msgs: List[str] = []
         for provider in self.log_providers:
-            msgs.extend(provider.get_log(commit_limit=commit_limit, rev=rev))
+            msgs.extend(
+                provider.get_log(
+                    LogProviderOptions(commit_limit=commit_limit, rev=rev, ignore_revs=self.settings.ignore_revs)
+                )
+            )
         return msgs
 
     def get_changelog_section(

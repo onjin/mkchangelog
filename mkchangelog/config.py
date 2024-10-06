@@ -25,6 +25,7 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
         "commit_type_default_priority": 10,
         "tag_prefix": "v",
         "raise_exceptions": False,
+        "ignore_revs": [],
     },
     "commit_types": {
         "build": "Build",
@@ -99,6 +100,9 @@ class Settings:
 
     # raise exceptions on command's errors
     raise_exceptions: bool = DEFAULT_SETTINGS["GENERAL"]["raise_exceptions"]
+
+    # ignore revs when using GitLogProvider
+    ignore_revs: list[str] = field(default_factory=lambda: DEFAULT_SETTINGS["GENERAL"]["ignore_revs"])
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any], *, strict: bool = True) -> Settings:

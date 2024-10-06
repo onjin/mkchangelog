@@ -10,7 +10,7 @@ from mkchangelog.config import Settings, get_settings
 from mkchangelog.core import ChangelogGenerator, get_next_version
 from mkchangelog.models import Changelog, ChangelogSection, CommitType, LogLine, Version
 from mkchangelog.parser import GitMessageParser
-from mkchangelog.providers import LogProvider, VersionsProvider
+from mkchangelog.providers import LogProvider, LogProviderOptions, VersionsProvider
 
 
 def pytest_generate_tests(metafunc):
@@ -94,9 +94,7 @@ class MockLogProvider(LogProvider):
 
     def get_log(
         self,
-        commit_limit: int = 1000,  # noqa: ARG002
-        rev: Optional[str] = None,  # noqa: ARG002
-        types: Optional[list[str]] = None,  # noqa: ARG002
+        options: LogProviderOptions,
     ) -> Generator[LogLine, None, None]:
         return self._log
 

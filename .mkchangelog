@@ -9,6 +9,7 @@ changelog_title = Changelog
 commit_types_list = fix,feat,refactor
 commit_type_default_priority = 10
 tag_prefix = v
+ignore_revs = 7cbb5e69b2984bc2c69434e49582bb84e2e31df6
 
 [commit_types]
 build = Build
