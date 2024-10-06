@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "mkchangelog"
 dynamic = ["version"]
-description = "Generate changelog from git log with convencional commits'"
+description = "Generate changelog from git log with convencional commits."
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
