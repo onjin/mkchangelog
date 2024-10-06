@@ -1,6 +1,8 @@
 # Changelog
 
-demO Of custOM "fANcylizE" FILtEr 
+dEMO Of custom "FAncYlIzE" fILtER 
+
+## Unreleased (2024-10-06)
 
 ## v2.5.0 (2024-10-06)
 
@@ -13,6 +15,8 @@ demO Of custOM "fANcylizE" FILtEr
 ### Features
 
 - **hooks:** add hooks system to expand mkchangelog features using python code 
+
+## v2.3.3 (2024-02-04)
 
 ### Fixes
 
