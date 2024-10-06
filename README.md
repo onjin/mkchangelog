@@ -93,6 +93,7 @@ changelog_title = Changelog             ; Changelog title
 commit_types_list = fix,feat            ; list of commit types to include in Changelog
 commit_type_default_priority = 10       ; default priority of commit type, for Changelog ordering
 tag_prefix = v                          ; versions tag prefix to detect/generate git tags
+ignore_revs = 3a3bc...,...              ; ignore certain git revisions durint generating Changelog
 
 [commit_types]                          ; valid commit types (for `--commit-types all`) and their names
 build = Build
@@ -123,6 +124,7 @@ refactor = 20
 - from git log messages matching configured `commit_types` are parsed and grouped by the type.
 - certain groups (types) are sorted by configured `commit_types_priorities`.
 - only configured `commit_types_list` types are rendered, if not `--commit-types [type,type, | all]` was provided
+- you can also set `ignored_revs` list in `.mkchangelog`, to skip certain git revisions by sha
 
 ### Includes additional git commits from text files
 
