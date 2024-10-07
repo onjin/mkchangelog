@@ -76,13 +76,15 @@ class GitVersionsProvider(VersionsProvider):
 
 
 class GitLogProvider(LogProvider):
+    repo_factory = Repo
+
     def get_log(self, options: LogProviderOptions) -> Iterable[str]:
         """Return git log messages.
 
         Args:
             options: LogProviderOptions
         """
-        repo = Repo(".")
+        repo = self.repo_factory(".")
         all_commits = repo.iter_commits(max_count=options.commit_limit, no_merges=True, rev=options.rev)
 
         if options.ignore_revs:
