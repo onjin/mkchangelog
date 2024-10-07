@@ -1,4 +1,6 @@
-from collections.abc import Iterator
+from __future__ import annotations
+
+from typing import Iterator
 
 from git import Commit, Repo
 from gitdb.db.loose import hex_to_bin
