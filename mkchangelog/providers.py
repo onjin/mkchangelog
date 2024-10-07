@@ -83,9 +83,8 @@ class GitLogProvider(LogProvider):
             options: LogProviderOptions
         """
         repo = Repo(".")
-        all_commits = [
-            commit for commit in repo.iter_commits(max_count=options.commit_limit, no_merges=True, rev=options.rev)
-        ]
+        all_commits = repo.iter_commits(max_count=options.commit_limit, no_merges=True, rev=options.rev)
+
         if options.ignore_revs:
             all_commits = [c for c in all_commits if c.hexsha not in options.ignore_revs]
         return [c.message for c in all_commits]

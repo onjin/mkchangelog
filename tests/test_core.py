@@ -94,7 +94,7 @@ class MockLogProvider(LogProvider):
 
     def get_log(
         self,
-        options: LogProviderOptions,
+        options: LogProviderOptions,  # noqa: ARG002
     ) -> Generator[LogLine, None, None]:
         return self._log
 

@@ -15,7 +15,6 @@
         pypkgs = pkgs.python3Packages;
         python = pkgs.python3.override {
           packageOverrides = self: super: {
-            mkchangelog = mkchangelog;
             hatch = pkgs.hatch;
             ruff = pkgs.ruff;
             mypy = pkgs.mypy;
@@ -24,27 +23,6 @@
         };
         project =
           pyproject-nix.lib.project.loadPyproject { projectRoot = ./.; };
-
-        mkchangelog = python.pkgs.buildPythonPackage rec {
-          pname = "mkchangelog";
-          version = "2.4.0";
-
-          src = python.pkgs.fetchPypi {
-            inherit pname version;
-            sha256 = "";
-          };
-
-          doCheck = false;
-          checkInputs = [ ];
-          propagatedBuildInputs = [ pypkgs.feedparser ];
-
-          meta = with pkgs.lib; {
-            homepage = "https://github.com/onjin/mkchangelog";
-            description =
-              "Generate changelog from git log with convencional commits.";
-            license = licenses.mit;
-          };
-        };
 
       in {
         packages = {
