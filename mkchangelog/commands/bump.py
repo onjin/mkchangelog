@@ -99,10 +99,10 @@ class BumpCommand(Command):
 
         if args.show_next_version:
             if next_version:
-                print(next_version.name)
+                console.print(next_version.name)
             return
         elif args.show_current_version:
-            print(version_name)
+            console.print(version_name)
             return
 
         elif next_version:
