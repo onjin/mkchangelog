@@ -37,6 +37,7 @@ Source = "https://github.com/onjin/mkchangelog"
 
 [project.scripts]
 mkchangelog = "mkchangelog:main"
+git-mkc = "mkchangelog:main"
 
 [tool.hatch.version]
 path = "mkchangelog/__about__.py"
