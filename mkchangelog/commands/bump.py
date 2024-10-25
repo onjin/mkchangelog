@@ -52,6 +52,11 @@ class BumpCommand(Command):
             action="store_true",
             help="only show next version",
         )
+        parser.add_argument(
+            "--show-next-version",
+            action="store_true",
+            help="only show next version (for scripting)",
+        )
 
     @classmethod
     def execute(cls, args: argparse.Namespace, app: Application):
@@ -68,7 +73,8 @@ class BumpCommand(Command):
             version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
             rev = "HEAD"
 
-        console.print(f"[green]Current version:[/green] {version_name} ({version_date})")
+        if not args.show_next_version:
+            console.print(f"[green]Current version:[/green] {version_name} ({version_date})")
         commits = app.changelog_generator.get_log_messages(
             commit_limit=options.commit_limit,
             rev=rev,
@@ -82,7 +88,11 @@ class BumpCommand(Command):
         else:
             next_version = get_next_version(options.tag_prefix, version_name, commits)
 
-        if next_version:
+        if args.show_next_version:
+            if next_version:
+                print(next_version.name)
+            return
+        elif next_version:
             console.print(
                 f"[blue]Next version:[/blue]    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})"
             )
