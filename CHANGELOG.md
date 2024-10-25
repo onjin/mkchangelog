@@ -1,8 +1,14 @@
 # Changelog
 
-dEMO Of custom "FAncYlIzE" fILtER 
+DEMo oF cUsTom "FaNcyLIZE" fiLter 
 
-## Unreleased (2024-10-06)
+## v2.6.0 (2024-10-25)
+
+### Features
+
+- add `mkchangelog bump --show-current-version` which prints only current version name 
+- add `mkchangelog bump --show-next-versions` which prints only next version name - if available - or nothing 
+- add `git mkc` alias for `mkchangelog` 
 
 ## v2.5.0 (2024-10-06)
 
