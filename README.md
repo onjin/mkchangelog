@@ -43,6 +43,7 @@ $ mkchangelog generate       # Creates CHANGELOG.md
 $ mkchangelog g              # Creates CHANGELOG.md
 $ mkchangelog g --stdout     # Prints changelog to stdout
 $ mkchangelog g --help       # Prints help for generate command
+$ git mkc g                  # git mkc alias for mkchangelog
 ```
 
 ### Generate commit message
@@ -50,6 +51,7 @@ $ mkchangelog g --help       # Prints help for generate command
 ```console
 $ mkchangelog commit         # Generates message.txt
 $ mkchangelog c              # Generates message.txt
+$ git mkc c                  # git mkc alias for mkchangelog
 $ git commit -F message.txt  # Use message.txt as commit message
 ```
 
@@ -64,6 +66,9 @@ Interactive tool to:
 ```console
 $ mkchangelog bump           # Bumps next version
 $ mkchangelog b              # Bumps next version
+$ mkchangelog b --show-current-version  # Only show current version
+$ mkchangelog b --show-next-version     # Only show next version
+$ git mkc b                  # git mkc alias for mkchangelog
 ```
 
 ### Manage configuration
@@ -74,6 +79,7 @@ You can change default configuration using `.mkchangelog` (ini format) file in c
 $ mkchangelog settings       # Shows current config as jon
 $ mkchangelog s              # Shows current config as jon
 $ mkchangelog s --generate   # Prints default config ini file
+$ git mkc s                  # git mkc alias for mkchangelog
 ```
 
 ## Configuration
