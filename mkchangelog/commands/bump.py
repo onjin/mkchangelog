@@ -50,12 +50,17 @@ class BumpCommand(Command):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="only show next version",
+            help="only print current and next version",
         )
         parser.add_argument(
             "--show-next-version",
             action="store_true",
             help="only show next version (for scripting)",
+        )
+        parser.add_argument(
+            "--show-current-version",
+            action="store_true",
+            help="only show current version (for scripting)",
         )
 
     @classmethod
@@ -73,7 +78,11 @@ class BumpCommand(Command):
             version_date = datetime.now(tz=TZ_INFO).strftime(DATE_FORMAT)
             rev = "HEAD"
 
-        if not args.show_next_version:
+        script_mode = False
+        if args.show_next_version or args.show_current_version:
+            script_mode = True
+
+        if not script_mode:
             console.print(f"[green]Current version:[/green] {version_name} ({version_date})")
         commits = app.changelog_generator.get_log_messages(
             commit_limit=options.commit_limit,
@@ -92,6 +101,10 @@ class BumpCommand(Command):
             if next_version:
                 print(next_version.name)
             return
+        elif args.show_current_version:
+            print(version_name)
+            return
+
         elif next_version:
             console.print(
                 f"[blue]Next version:[/blue]    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})"
