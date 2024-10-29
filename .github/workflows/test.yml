@@ -30,24 +30,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+    - name: Set up uv
+      uses: astral-sh/setup-uv@3b9817b1bf26186f03ab8277bab9b827ea5cc254 # v3.2.0
       with:
-        python-version: ${{ matrix.python-version }}
+        enable-cache: true
+        cache-dependency-glob: |
+          **/pyproject.toml
+          **/uv.lock
+    - name: Install Python
+      run: uv python install ${{ matrix.python-version }}
 
-    - name: Ensure latest pip
-      run: python -m pip install --upgrade pip
-
-    - name: Ensure latest hatch
-      run: python -m pip install --upgrade hatch
-
-    - name: Install ourself
-      run: |
-        pip install -e .
-
-    - if: ${{ !startsWith(matrix.python-version, 'pypy') }}
-      name: Lint
-      run: hatch run lint:style
+    - name: Install Hatch
+      run: uv tool install hatch
 
     - name: Run tests
-      run: hatch run all:test
+      run: hatch run test
