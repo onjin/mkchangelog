@@ -40,7 +40,7 @@ mkchangelog = "mkchangelog:main"
 git-mkc = "mkchangelog:main"
 
 [tool.hatch.version]
-path = "mkchangelog/__about__.py"
+path = "src/mkchangelog/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -151,7 +151,7 @@ source_pkgs = ["mkchangelog", "tests"]
 branch = true
 parallel = true
 omit = [
-  "mkchangelog/__about__.py",
+  "src/mkchangelog/__about__.py",
 ]
 
 [tool.coverage.paths]
