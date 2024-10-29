@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import abc
-import argparse
+from typing import TYPE_CHECKING
 
-from mkchangelog.app import Application
+if TYPE_CHECKING:
+    import argparse
+
+    from mkchangelog.app import Application
 
 
 class Command:
@@ -13,13 +16,13 @@ class Command:
     aliases: tuple[str, ...]
 
     @classmethod
-    def register(cls, subparsers: argparse._SubParsersAction[argparse.ArgumentParser]):
-        """Register Command to subparsers
+    def register(cls, subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> argparse.ArgumentParser:
+        """
+        Register Command to subparsers.
 
         Creates the subparser for command options and sets `command=cls.execute` as default
         executor.
         """
-
         subparser = subparsers.add_parser(name=cls.name, help=cls.__doc__, aliases=cls.aliases)
         cls.add_arguments(subparser)
         subparser.set_defaults(command=cls.execute)

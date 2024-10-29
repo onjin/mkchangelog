@@ -100,8 +100,8 @@ extra-dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-lint       = "ruff check --output-format=full --show-fixes {args}"
-format     = "black {args}"
+lint       = "ruff check --output-format=full --show-fixes {args:./src}"
+format     = "black {args:./src}"
 typecheck  = "mypy {args:.}"
 test       = "pytest tests/ {args}"
 all        = ["format", "lint", "typecheck", "test"]
@@ -173,6 +173,11 @@ skip-string-normalization = true
 target-version = "py38"
 line-length = 120
 
+extend-exclude = [
+  "src/mkchangelog/__init__.py",
+  "src/mkchangelog/__version__.py",
+]
+
 [tool.ruff.lint]
 select = ["ALL"]
 
@@ -186,30 +191,38 @@ ignore = [
   "TD002",  # Assign someone to 'TODO' comments
 
   # The following are disabled for compatibility with the formatter
-  "COM812", # enforce trailing commas
-  "ISC001", # require imports to be sorted
+  "COM812", # Enforce trailing commas
+  "ISC001", # Require imports to be sorted
+
+  "ANN401", # Sometimes we return Any for now
+  "PLR0913",# Allow too many parameters
+  "D107",   # Do not force docstrings on __init__
+  "D100",   # Missing docstrings
+  "D101",   # Missing docstrings
+  "D102",   # Missing docstrings
+  "D103",   # Missing docstrings
+  "D104",   # Missing docstrings
+  "C901",   # We have complex functions
+  "PLR0912",# With many branches
+  "PTH123", # We stick with open()
+  "PTH207", # We stick with glob()
 ]
 
-# ignore = [
-#   # Allow non-abstract empty methods in abstract base classes
-#   "B027",
-#   # Allow boolean positional values in function calls, like `dict.get(... True)`
-#   "FBT003",
-#   # Ignore checks for possible passwords
-#   "S105", "S106", "S107",
-#   # Ignore complexity
-#   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
-# ]
-unfixable = [
-  # Don't touch unused imports
-  #"F401",
-]
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.isort]
 known-first-party = ["mkchangelog"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.format]
+preview               = true
+docstring-code-format = true
 
 [tool.ruff.lint.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports

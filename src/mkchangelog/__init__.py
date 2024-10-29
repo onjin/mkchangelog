@@ -1,6 +1,4 @@
-# spdx-filecopyrighttext: 2023-present Marek Wywiał <onjinx@gmail.com>
-#
-# SPDX-License-Identifier: MIT
+from __future__ import annotations
 
 import argparse
 import logging
@@ -17,16 +15,16 @@ from mkchangelog.commands.generate import GenerateCommand
 from mkchangelog.commands.settings import SettingsCommand
 from mkchangelog.config import get_settings
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 env = os.getenv
 
 
-def add_stdout_handler(verbosity: int):
-    """Adds stdout handler with given verbosity to logger.
+def add_stdout_handler(verbosity: int) -> None:
+    """
+    Add stdout handler with given verbosity to logger.
 
     Args:
-        logger (Logger) - python logger instance
-        verbosity (int) - target verbosity
+        verbosity: target verbosity
                           1 - ERROR
                           2 - INFO
                           3 - DEBUG
@@ -35,13 +33,13 @@ def add_stdout_handler(verbosity: int):
         add_stdout_handler(verbosity=3)
 
     """
-
     v_map = {1: logging.ERROR, 2: logging.INFO, 3: logging.DEBUG}
     level = v_map.get(verbosity, 1)
     logging.basicConfig(level=level)
 
 
-def main(argv: Optional[Sequence[str]] = None):
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    """Run main program."""
     prog = "mkchangelog"
     description = "Manage CHANGELOG and versions"
 
@@ -78,8 +76,7 @@ def main(argv: Optional[Sequence[str]] = None):
         except Exception as exc:
             if args.raise_exceptions:
                 raise
-            else:
-                console = Console(file=sys.stderr)
-                console.print(f"[red]{exc.__class__.__name__}: {exc}")
+            console = Console(file=sys.stderr)
+            console.print(f"[red]{exc.__class__.__name__}: {exc}")
     else:
         parser.print_help()

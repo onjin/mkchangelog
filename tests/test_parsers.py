@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import textwrap
 from inspect import isclass
-from typing import Union
 
 import pytest
 
@@ -12,7 +11,7 @@ from mkchangelog.parser import GitMessageParser
 
 class TestRegexpes:
     @pytest.mark.parametrize(
-        "message,matches",
+        ("message", "matches"),
         [
             (
                 "super feature landed",
@@ -58,7 +57,7 @@ class TestRegexpes:
             ),
         ],
     )
-    def test_commit_regexp(self, message: str, matches: Union[dict[str, str], Exception]):
+    def test_commit_regexp(self, message: str, matches: dict[str, str] | Exception) -> None:
         # When - matched against summary regexp
         if isclass(matches) and issubclass(matches, Exception):
             with pytest.raises(matches):
@@ -66,12 +65,12 @@ class TestRegexpes:
         else:
             result = GitMessageParser(Settings()).parse(message)
             # Then - commit is parsed properly
-            for key in matches.keys():
+            for key in matches:
                 assert getattr(result, key) == matches[key], result
 
 
 class TestGitLogParser:
-    def test_commit_subject_regexp(self):
+    def test_commit_subject_regexp(self) -> None:
         # Given -  feature with scope
         message = "feat(admin): super feature landed"
 
@@ -83,7 +82,7 @@ class TestGitLogParser:
         assert line.scope == "admin"
         assert line.summary == "super feature landed"
 
-    def test_body_and_footer_references_regexp(self):
+    def test_body_and_footer_references_regexp(self) -> None:
         # Given - msg with body and footer
         message = textwrap.dedent(
             """feat(admin): asdfasdfsdf
@@ -103,7 +102,7 @@ class TestGitLogParser:
             "Relates": {"ISS-223", "ISS-232"},
         }
 
-    def test_only_footer_references_regexp(self):
+    def test_only_footer_references_regexp(self) -> None:
         # Given - msg with no body and footer
         message = """feat(admin): asdfasdfsdf
 
@@ -119,7 +118,7 @@ class TestGitLogParser:
             "Relates": {"ISS-223", "ISS-232"},
         }
 
-    def test_get_references_from_msg(self):
+    def test_get_references_from_msg(self) -> None:
         # Given - msg with references
         message = """feat(admin): asdfasdfsdf
 
@@ -179,7 +178,7 @@ class TestGitLogParser:
         ]
 
     @pytest.mark.parametrize(
-        "message,changes",
+        ("message", "changes"),
         [
             (
                 textwrap.dedent(
@@ -209,7 +208,7 @@ class TestGitLogParser:
             ),
         ],
     )
-    def test_gather_breaking_changes(self, message: str, changes: list[str]):
+    def test_gather_breaking_changes(self, message: str, changes: list[str]) -> None:
         # Given - breaking changes in footer
         # When - matched against regexp
         line = GitMessageParser(Settings()).parse(message)

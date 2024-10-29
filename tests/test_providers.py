@@ -23,7 +23,7 @@ class FakeGitLogProvider(GitLogProvider):
 
 
 class TestGitLogProvider:
-    def test_ignore_revs(self):
+    def test_ignore_revs(self) -> None:
         non_ignored_revs = {
             "6e8319de2a27501b9fec6c0d4de0c6f7888a2fb7": "docs(README.md): Add info about new `ignore_revs`",
         }
@@ -35,17 +35,17 @@ class TestGitLogProvider:
         # first, test plain log
         logs = FakeGitLogProvider().get_log(LogProviderOptions(ignore_revs=None))
 
-        for _, value in non_ignored_revs.items():
+        for value in non_ignored_revs.values():
             assert value in logs
 
-        for _, value in ignored_revs.items():
+        for value in ignored_revs.values():
             assert value in logs
 
         # then, test with ignore_revs set
         logs = FakeGitLogProvider().get_log(LogProviderOptions(ignore_revs=ignored_revs.keys()))
 
-        for _, value in non_ignored_revs.items():
+        for value in non_ignored_revs.values():
             assert value in logs
 
-        for _, value in ignored_revs.items():
+        for value in ignored_revs.values():
             assert value not in logs

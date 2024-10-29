@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Callable, Dict, List
+from typing import TYPE_CHECKING, Any, Callable
 
-from mkchangelog.config import Settings
 from mkchangelog.lib import hookimpl
-from mkchangelog.models import LogLine
+
+if TYPE_CHECKING:
+    from mkchangelog.config import Settings
+    from mkchangelog.models import LogLine
 
 
 def fancylize(s):
@@ -13,10 +15,10 @@ def fancylize(s):
 
 
 @hookimpl
-def provide_template_filters(settings: Settings) -> Dict[str, Callable[[Any], str]]:  # noqa: ARG001
+def provide_template_filters(settings: Settings) -> dict[str, Callable[[Any], str]]:  # noqa: ARG001
     return {"fancylize": fancylize}
 
 
 @hookimpl
-def provide_changelog_loglines_filter(settings: Settings) -> Callable[[List[LogLine]], List[LogLine]]:  # noqa: ARG001
+def provide_changelog_loglines_filter(settings: Settings) -> Callable[[list[LogLine]], list[LogLine]]:  # noqa: ARG001
     return lambda loglines: [line for line in loglines if line.scope != "hidden_scope"]

@@ -7,8 +7,8 @@ class MKChangelogRuntimeError(MKChangelogError):
 
 
 class MKChangelogTemplateError(MKChangelogRuntimeError):
-    """Error during execution of template"""
+    """Error during execution of template."""
 
 
 class MKChangelogFilterError(MKChangelogTemplateError):
-    """Error during execution of template filter"""
+    """Error during execution of template filter."""

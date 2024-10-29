@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import argparse
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from git import Repo
 from rich.console import Console
 from rich.prompt import Confirm
 
-from mkchangelog.app import Application
 from mkchangelog.commands import Command
 from mkchangelog.commands.generate import GenerateCommand
 from mkchangelog.core import (
@@ -19,13 +18,18 @@ from mkchangelog.utils import (
     TZ_INFO,
 )
 
+if TYPE_CHECKING:
+    import argparse
 
-def create_tag(name: str, message: str):
+    from mkchangelog.app import Application
+
+
+def create_tag(name: str, message: str) -> None:
     repo = Repo(".")
     repo.create_tag(name, message=message)
 
 
-def git_commit(files: list[str], message: str):
+def git_commit(files: list[str], message: str) -> None:
     repo = Repo(".")
     index = repo.index
     index.add(files)
@@ -39,7 +43,7 @@ class BumpCommand(Command):
     aliases = ("b",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
         GenerateCommand.add_arguments(parser)
         parser.add_argument(
             "-v",
@@ -64,7 +68,7 @@ class BumpCommand(Command):
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace, app: Application):
+    def execute(cls, args: argparse.Namespace, app: Application) -> None:
         console = Console()
         options = app.settings.apply_args(args, strict=False)
 
@@ -101,11 +105,11 @@ class BumpCommand(Command):
             if next_version:
                 console.print(next_version.name)
             return
-        elif args.show_current_version:
+        if args.show_current_version:
             console.print(version_name)
             return
 
-        elif next_version:
+        if next_version:
             console.print(
                 f"[blue]Next version:[/blue]    {next_version.name} ({next_version.date.strftime(DATE_FORMAT)})"
             )

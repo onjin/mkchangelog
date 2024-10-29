@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-import argparse
 import json
 import sys
+from typing import TYPE_CHECKING
 
 from rich import print_json
 
-from mkchangelog.app import Application
 from mkchangelog.commands import Command
 from mkchangelog.config import generate_config
+
+if TYPE_CHECKING:
+    import argparse
+
+    from mkchangelog.app import Application
 
 
 class SettingsCommand(Command):
@@ -18,7 +22,7 @@ class SettingsCommand(Command):
     aliases = ("s",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--generate",
             action="store_true",
@@ -26,7 +30,7 @@ class SettingsCommand(Command):
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace, app: Application):
+    def execute(cls, args: argparse.Namespace, app: Application) -> None:
         if args.generate:
             config = generate_config()
             config.write(sys.stdout)

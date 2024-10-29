@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import argparse
-from typing import List
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
-from mkchangelog.app import Application
 from mkchangelog.commands import Command
+
+if TYPE_CHECKING:
+    import argparse
+
+    from mkchangelog.app import Application
 
 
 class CommitCommand(Command):
@@ -17,7 +20,7 @@ class CommitCommand(Command):
     aliases = ("c",)
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--stdout",
             action="store_true",
@@ -26,7 +29,7 @@ class CommitCommand(Command):
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace, app: Application):
+    def execute(cls, args: argparse.Namespace, app: Application) -> None:
         console = Console()
         console.print("[green]Git Commit Format: type(scope): summary")
         console.print()
@@ -63,7 +66,7 @@ class CommitCommand(Command):
         if is_breaking_change:
             commit += "!"
         commit += f": {summary}"
-        footer_lines: List[str] = []
+        footer_lines: list[str] = []
         if breaking_change:
             footer_lines.append(f"BREAKING CHANGE: {breaking_change}")
 

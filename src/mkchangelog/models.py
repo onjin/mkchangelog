@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, NewType, Optional, Set
+from typing import TYPE_CHECKING, Any, NewType
 
 import semver
-from git import Commit
 
 from mkchangelog.utils import TZ_INFO
 
 if TYPE_CHECKING:
-    pass
+    from git import Commit
 
 CommitType = NewType("CommitType", str)
 
@@ -27,31 +26,30 @@ class LogLine:
     commit_type: str
 
     # optional parsed scope from
-    scope: Optional[str] = None
+    scope: str | None = None
 
     # parsed referenced tickets
-    references: Optional[Dict[str, Set[str]]] = None
+    references: dict[str, set[str]] | None = None
 
     # parsed BREAKING CHANGE: paragraph
     breaking_change: bool = False
-    breaking_changes: Optional[Dict[str, str]] = None
+    breaking_changes: dict[str, str] | None = None
 
-    # TODO: change core code to put original commit here
-    commit: Optional[Commit] = None
+    commit: Commit | None = None
 
 
 @dataclass(frozen=True)
 class MatchedLine:
     message: str
     summary: str
-    groups: Dict[str, Any]
+    groups: dict[str, Any]
 
 
 @dataclass()
 class Version:
     name: str
-    date: Optional[datetime] = None
-    semver: Optional[str] = None
+    date: datetime | None = None
+    semver: str | None = None
 
     @classmethod
     def from_str(cls, name: str, version: str) -> Version:
@@ -61,10 +59,10 @@ class Version:
 
 @dataclass
 class ChangelogSection:
-    version: Optional[Version]
-    changes: Dict[CommitType, List[LogLine]] = field(default_factory=dict)
-    reverts: List[LogLine] = field(default_factory=list)
-    breaking_changes: List[LogLine] = field(default_factory=list)
+    version: Version | None
+    changes: dict[CommitType, list[LogLine]] = field(default_factory=dict)
+    reverts: list[LogLine] = field(default_factory=list)
+    breaking_changes: list[LogLine] = field(default_factory=list)
     header: str = ""
     footer: str = ""
 
@@ -72,4 +70,4 @@ class ChangelogSection:
 @dataclass
 class Changelog:
     title: str
-    sections: List[ChangelogSection]
+    sections: list[ChangelogSection]

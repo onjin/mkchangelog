@@ -3,10 +3,12 @@ from __future__ import annotations
 import re
 import textwrap
 from collections import defaultdict
-from typing import Any, Dict, Match, Optional
+from typing import TYPE_CHECKING, Any, Match
 
-from mkchangelog.config import Settings
 from mkchangelog.models import LogLine
+
+if TYPE_CHECKING:
+    from mkchangelog.config import Settings
 
 
 class GitMessageParser:
@@ -33,7 +35,7 @@ class GitMessageParser:
         re.MULTILINE,
     )
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         types = "|".join(settings.commit_types.keys())
         self.COMMIT_REGEXP = re.compile(
             (
@@ -50,7 +52,8 @@ class GitMessageParser:
         self.REF_ALIASES = settings.reference_aliases
 
     def _get_references_from_msg(self, msg: str) -> dict[str, set[str]]:
-        """Get references from commit message
+        """
+        Get references from commit message.
 
         Args:
             msg (str): commit message
@@ -59,10 +62,11 @@ class GitMessageParser:
         Returns:
             dict[set] - dictionary with references
 
-            example:
+        Example:
                 {
                     "Closes": set("ISS-123", "ISS-321")
                 }
+
         """
         result = self.REF_REGEXP.findall(msg)
         if not result:
@@ -78,8 +82,9 @@ class GitMessageParser:
                 refs[action].add(ref.strip())
         return dict(refs)
 
-    def _get_breaking_changes(self, message: str) -> Optional[list[str]]:
-        """Returns list of breaking changes descriptions
+    def _get_breaking_changes(self, message: str) -> list[str] | None:
+        r"""
+        Returns list of breaking changes descriptions.
 
         Example message:
             feat(admin): asdfasdfsdf
@@ -93,6 +98,7 @@ class GitMessageParser:
 
         Returns:
             list - ['someone\nbroken\nhere']
+
         """
         breaking_changes = self.BREAKING_CHANGES_REGEXP.findall(message)
         if not breaking_changes:
@@ -105,10 +111,11 @@ class GitMessageParser:
             first_line, body = message.split("\n", 1)
         else:
             first_line, body = message, ""
-        match: Optional[Match[Dict[str, Any]]] = self.COMMIT_REGEXP.search(first_line)
+        match: Match[dict[str, Any]] | None = self.COMMIT_REGEXP.search(first_line)
         if not match:
-            raise ValueError(f"Invalid commit {first_line}")
-        parts: Dict[str, Any] = match.groupdict()
+            msg = f"Invalid commit {first_line}"
+            raise ValueError(msg)
+        parts: dict[str, Any] = match.groupdict()
         references = self._get_references_from_msg(body) or {}
         breaking_changes = references.get("BREAKING CHANGE", set())
         breaking_change = bool(breaking_changes or parts["breaking"] == "!")

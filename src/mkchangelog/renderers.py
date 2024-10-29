@@ -5,18 +5,20 @@ import dataclasses
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Type
+from typing import TYPE_CHECKING, Any
 
 import semver
-from git import Optional
 from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 
-from mkchangelog.config import Settings
-from mkchangelog.models import Changelog, ChangelogSection
+if TYPE_CHECKING:
+    from git import Optional
+
+    from mkchangelog.config import Settings
+    from mkchangelog.models import Changelog, ChangelogSection
 
 
 class BaseChangelogRenderer:
-    def ordered_types(self, types: List[str]) -> List[str]:
+    def ordered_types(self, types: list[str]) -> list[str]:
         """Return commit types sorted by ordering priority."""
         return sorted(
             types,
@@ -28,7 +30,7 @@ class BaseChangelogRenderer:
 class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
     TEMPLATE: str = None
 
-    def __init__(self, settings: Settings, template: Optional[str] = None):
+    def __init__(self, settings: Settings, template: Optional[str] = None) -> None:
         self.settings = settings
 
         # support absolute templates path
@@ -37,7 +39,7 @@ class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
 
         self.template = template or self.TEMPLATE
         if template:
-            search_paths = [Path.cwd(), Path.cwd().root, Path(".") / ".mkchangelog.d" / "templates"]
+            search_paths = [Path.cwd(), Path.cwd().root, Path() / ".mkchangelog.d" / "templates"]
             loader = FileSystemLoader(search_paths, followlinks=True)
         else:
             loader = PackageLoader("mkchangelog")
@@ -54,7 +56,7 @@ class TemplateChangelogRenderer(BaseChangelogRenderer, abc.ABC):
 
 
 class ChangelogRenderer(BaseChangelogRenderer, abc.ABC):
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
     @abc.abstractmethod
@@ -65,21 +67,29 @@ class ChangelogRenderer(BaseChangelogRenderer, abc.ABC):
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o: Any) -> Any:
+        """Add types handlers to encoder.
+
+        Args:
+            o: parsed object
+
+        Returns:
+            Any
+        """
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
-        elif isinstance(o, set):
+        if isinstance(o, set):
             return list(o)
-        elif isinstance(o, datetime):
+        if isinstance(o, datetime):
             return o.isoformat()
-        elif isinstance(o, semver.Version):
+        if isinstance(o, semver.Version):
             return str(o)
 
         return super().default(o)
 
 
 class JsonChangelogRenderer(ChangelogRenderer):
-    def dumps(self, obj: Any):
+    def dumps(self, obj: Any) -> str:
         return json.dumps(obj, cls=EnhancedJSONEncoder)
 
     def render(self, changelog: Changelog) -> Any:
@@ -101,7 +111,7 @@ class RstChangelogRenderer(TemplateChangelogRenderer):
     TEMPLATE = "rst.jinja2"
 
 
-RENDERERS: Dict[str, Type[ChangelogRenderer]] = {
+RENDERERS: dict[str, type[ChangelogRenderer]] = {
     "json": JsonChangelogRenderer,
     "markdown": MarkdownChangelogRenderer,
     "rst": RstChangelogRenderer,

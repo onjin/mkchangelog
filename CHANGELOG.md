@@ -1,6 +1,12 @@
 # Changelog
 
-DEMo oF cUsTom "FaNcyLIZE" fiLter 
+DeMo OF CusTOM "FAncyLIzE" fiLtEr 
+
+## Unreleased (2024-10-29)
+
+### Refactors
+
+- Move project source code into `src` directory 
 
 ## v2.6.0 (2024-10-25)
 

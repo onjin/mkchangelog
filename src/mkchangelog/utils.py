@@ -4,7 +4,6 @@ import copy
 import sys
 from datetime import datetime, tzinfo
 from functools import partial
-from typing import List, Optional
 
 import semver
 
@@ -16,10 +15,10 @@ except ImportError:
     rich = None
     use_colors = False
 
-TZ_INFO: Optional[tzinfo] = datetime.now().astimezone().tzinfo
+TZ_INFO: tzinfo | None = datetime.now().astimezone().tzinfo
 
 
-def print_color(color: str, text: str):
+def print_color(color: str, text: str) -> None:
     if use_colors:
         from rich.console import Console
 
@@ -34,7 +33,8 @@ print_orange = partial(print_color, "orange")
 
 
 def create_version(prefix: str, version: str) -> semver.Version:
-    """Convert version name to semantic version
+    """
+    Convert version name to semantic version.
 
     Args:
         prefix (str): version tags prefix
@@ -42,12 +42,15 @@ def create_version(prefix: str, version: str) -> semver.Version:
 
     Returns:
         semver.Semver - semantic version object
+
     """
     return semver.Version.parse(version[len(prefix) :], optional_minor_and_patch=True)
 
 
 def strtobool(val: str) -> bool:
-    """Convert a string representation of truth to true (1) or false (0).
+    """
+    Convert a string representation of truth to true (1) or false (0).
+
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
@@ -55,15 +58,15 @@ def strtobool(val: str) -> bool:
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
         return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    if val in ("n", "no", "f", "false", "off", "0"):
         return False
-    else:
-        msg = f"invalid truth value {val!r}"
-        raise ValueError(msg)
+    msg = f"invalid truth value {val!r}"
+    raise ValueError(msg)
 
 
-def choice(question: str, choices: List[str], default: Optional[str] = None) -> str:
-    """Ask for choice.
+def choice(question: str, choices: list[str], default: str | None = None) -> str:
+    """
+    Ask for choice.
 
     Args:
         question (str): question to display
@@ -72,8 +75,9 @@ def choice(question: str, choices: List[str], default: Optional[str] = None) -> 
 
     Returns:
         str - selected choice
+
     """
-    display_choices: List[str] = copy.copy(choices)
+    display_choices: list[str] = copy.copy(choices)
     if default:
         display_choices[display_choices.index(default)] = default.upper()
 
@@ -89,8 +93,9 @@ def choice(question: str, choices: List[str], default: Optional[str] = None) -> 
         return choice
 
 
-def yes_or_no(question: str, default: Optional[str] = "no") -> bool:
-    """Ask question and wait for yes or no decision.
+def yes_or_no(question: str, default: str | None = "no") -> bool:
+    """
+    Ask question and wait for yes or no decision.
 
     Args:
         question (str): question to display
@@ -98,6 +103,7 @@ def yes_or_no(question: str, default: Optional[str] = "no") -> bool:
 
     Returns:
         bool - according to user answer
+
     """
     if default is None:
         prompt = " [y/n] "
@@ -106,7 +112,8 @@ def yes_or_no(question: str, default: Optional[str] = "no") -> bool:
     elif default == "no":
         prompt = " [y/N] "
     else:
-        raise ValueError("invalid default answer: '%s'" % default)
+        msg = f"invalid default answer: '{default}'"
+        raise ValueError(msg)
 
     while True:
         sys.stdout.write(question + prompt)

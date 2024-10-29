@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import argparse
 import configparser
 import copy
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from git import List
 
 from mkchangelog.utils import strtobool
 
-DEFAULT_SETTINGS: Dict[str, Any] = {
+if TYPE_CHECKING:
+    import argparse
+
+DEFAULT_SETTINGS: dict[str, Any] = {
     "GENERAL": {
         "output": "CHANGELOG.md",
         "template": "markdown",
@@ -89,14 +91,14 @@ class Settings:
 
     # used to prioritize commit types section
     # - used in ChangelogRenderers
-    commit_types_priorities: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types_priorities"])
+    commit_types_priorities: dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types_priorities"])
 
     # used for `all` to check valid types, and to provide
     # header's names - used in ChangelogRenderers
-    commit_types: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types"])
+    commit_types: dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["commit_types"])
 
     # used to gather references f.e. Fixed, Fix, and Fixes under single Fix key
-    reference_aliases: Dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["reference_aliases"])
+    reference_aliases: dict[str, str] = field(default_factory=lambda: DEFAULT_SETTINGS["reference_aliases"])
 
     # raise exceptions on command's errors
     raise_exceptions: bool = DEFAULT_SETTINGS["GENERAL"]["raise_exceptions"]
@@ -105,8 +107,9 @@ class Settings:
     ignore_revs: list[str] = field(default_factory=lambda: DEFAULT_SETTINGS["GENERAL"]["ignore_revs"])
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any], *, strict: bool = True) -> Settings:
-        """Create settings from dictionary.
+    def from_dict(cls, d: dict[str, Any], *, strict: bool = True) -> Settings:
+        """
+        Create settings from dictionary.
 
         The input dictionary must contain 'GENERAL' section.
 
@@ -122,6 +125,7 @@ class Settings:
 
         Returns:
             Settings
+
         """
         config = {}
         for section, conf in d.items():
@@ -129,25 +133,25 @@ class Settings:
                 for key, value in conf.items():
                     if key not in Settings.__dataclass_fields__:
                         if strict:
-                            raise ValueError(f"Unknown setting {key}")
-                        else:
-                            continue
+                            msg = f"Unknown setting {key}"
+                            raise ValueError(msg)
+                        continue
                     config[key] = value
             else:
                 if section not in Settings.__dataclass_fields__:
                     if strict:
-                        raise ValueError(f"Unknown setting {section}")
-                    else:
-                        continue
+                        msg = f"Unknown setting {section}"
+                        raise ValueError(msg)
+                    continue
                 config[section] = conf
         return Settings(**config)
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         config = {}
         for section, conf in DEFAULT_SETTINGS.items():
             if section == "GENERAL":
                 config["GENERAL"] = {}
-                for key, _ in conf.items():
+                for key in conf:
                     config["GENERAL"][key] = getattr(self, key)
             else:
                 config[section] = conf
@@ -155,7 +159,7 @@ class Settings:
 
     def apply_args(self, args: argparse.Namespace, *, strict: bool = True) -> Settings:
         conf = self.as_dict()
-        for key, value in args._get_kwargs():
+        for key, value in args._get_kwargs():  # noqa: SLF001
             if key in ["verbosity", "command", "stdout"]:
                 continue
             if value is None:
@@ -182,13 +186,13 @@ def generate_config() -> configparser.ConfigParser:
     return config
 
 
-def read_ini_settings(path: str) -> Dict[str, Any]:
-    settings: Dict[str, Any] = {}
+def read_ini_settings(path: str) -> dict[str, Any]:
+    settings: dict[str, Any] = {}
 
     path = Path(path)
     config = configparser.ConfigParser()
     config.read(path)
-    for section_name, _ in DEFAULT_SETTINGS.items():
+    for section_name in DEFAULT_SETTINGS:
         if section_name in config:
             section = config[section_name]
             if section_name == "GENERAL":
@@ -209,9 +213,7 @@ def read_ini_settings(path: str) -> Dict[str, Any]:
 
 
 @lru_cache(maxsize=128)
-def get_settings():
+def get_settings() -> Settings:
     conf = copy.deepcopy(DEFAULT_SETTINGS)
     conf.update(read_ini_settings(".mkchangelog"))
-    # TODO: override some from pyproject.toml
-    # TODO: override some from ENV
     return Settings.from_dict(conf)

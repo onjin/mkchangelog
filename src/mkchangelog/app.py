@@ -1,30 +1,48 @@
+"""The Applications object."""
+
 from __future__ import annotations
 
 import importlib.util
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable
 
 import pluggy
 
 from mkchangelog import hookspecs, lib
-from mkchangelog.config import Settings
 from mkchangelog.core import ChangelogGenerator
-from mkchangelog.models import CommitType, Version
 from mkchangelog.parser import GitMessageParser
 from mkchangelog.providers import FilesLogProvider, GitLogProvider, GitVersionsProvider
 from mkchangelog.renderers import RENDERERS, ChangelogRenderer, TemplateChangelogRenderer
+
+if TYPE_CHECKING:
+    from mkchangelog.config import Settings
+    from mkchangelog.models import CommitType, Version
 
 logger = logging.getLogger()
 
 
 class Application:
-    def __init__(self, *, settings: Settings, changelog_generator: ChangelogGenerator, hook: pluggy.HookRelay):
+    """Main application code."""
+
+    def __init__(self, *, settings: Settings, changelog_generator: ChangelogGenerator, hook: pluggy.HookRelay) -> None:
         self.settings = settings
         self.changelog_generator = changelog_generator
         self.hook = hook
 
     def get_renderer(self, name: str) -> ChangelogRenderer:
+        """
+        Get ChangelogRenderer by name.
+
+        If renderer is not registered, then default TemplateChangelogRenderer is returned
+        with passed name as input template.
+
+        Args:
+            name: template name or already registered renderer name
+
+        Returns:
+            ChangelogRenderer
+        """
         try:
             renderer_class = RENDERERS[name]
             renderer = renderer_class(self.settings)
@@ -34,12 +52,13 @@ class Application:
         # register jinja filters for TemplateChangelogRenderer instances
         if isinstance(renderer, TemplateChangelogRenderer):
             for key, tpl_filter in self.get_template_filters().items():
-                logger.debug(f"registering filter '{key}'")
+                logger.debug("registering filter '%s'", key)
                 renderer.env.filters[key] = tpl_filter
         return renderer
 
-    def get_template_filters(self) -> Dict[str, Callable[[Any], str]]:
-        """Returns dictionary of registered template filters.
+    def get_template_filters(self) -> dict[str, Callable[[Any], str]]:
+        """
+        Returns dictionary of registered template filters.
 
         The final filters dictionary is merged from the default filters and from
         registered hooks.
@@ -52,17 +71,30 @@ class Application:
     def render_changelog(
         self,
         *,
-        template: Optional[str] = None,
-        title: Optional[str] = None,
-        commit_types: Optional[list[CommitType]] = None,
+        template: str | None = None,
+        title: str | None = None,
+        commit_types: list[CommitType] | None = None,
         unreleased: bool = False,
         unreleased_version: str = "Unreleased",
         hide_empty_releases: bool = False,
-        commit_limit: Optional[int] = None,
-    ):
+        commit_limit: int | None = None,
+    ) -> Any:
+        """
+        Render changelog.
+
+        Args:
+            template: optional template or registered renderer name
+            title: optional changelog title
+            commit_types: optional list of commit types to show in changelog
+            unreleased: whether include unreleased changes in changelog; default False
+            unreleased_version: unreleased changes section name; default 'Unreleased',
+            hide_empty_releases: whether hide empty releases or not; default False
+            commit_limit: limit of commits used to create changelog
+        """
         renderer = self.get_renderer(template)
         if not renderer:
-            raise ValueError(f"Unknown renderer: {renderer}")
+            msg = f"Unknown renderer: {renderer}"
+            raise ValueError(msg)
 
         return renderer.render(
             self.changelog_generator.get_changelog(
@@ -78,14 +110,27 @@ class Application:
     def render_changelog_section(
         self,
         renderer: str,
-        from_version: Optional[Version] = None,
-        to_version: Optional[Version] = None,
-        commit_types: Optional[list[CommitType, str]] = None,
-        commit_limit: Optional[int] = None,
-    ):
+        from_version: Version | None = None,
+        to_version: Version | None = None,
+        commit_types: list[CommitType, str] | None = None,
+        commit_limit: int | None = None,
+    ) -> Any:
+        """Render single changelog section.
+
+        Args:
+            renderer: registered renderer name
+            from_version: optional start version
+            to_version: optional stop version
+            commit_types: optional list of commit types to include in changelog
+            commit_limit: limit of commits used to create changelog
+
+        Returns:
+            Any
+        """
         renderer = self.get_renderer(renderer)
         if not renderer:
-            raise ValueError(f"Unknown renderer: {renderer}")
+            msg = f"Unknown renderer: {renderer}"
+            raise ValueError(msg)
         return renderer.render_section(
             self.changelog_generator.get_changelog_section(
                 from_version=from_version, to_version=to_version, commit_types=commit_types, commit_limit=commit_limit
@@ -94,11 +139,12 @@ class Application:
 
 
 def get_plugin_manager() -> pluggy.PluginManager:
+    """Return PluginManager."""
     pm = pluggy.PluginManager("mkchangelog")
     pm.add_hookspecs(hookspecs)
     pm.load_setuptools_entrypoints("mkchangelog")
 
-    hooks_path = Path(".") / ".mkchangelog.d" / "hooks.py"
+    hooks_path = Path() / ".mkchangelog.d" / "hooks.py"
     if hooks_path.exists():
         spec = importlib.util.spec_from_file_location("mkchangelog_hooks", hooks_path)
         if spec and spec.loader:
@@ -112,6 +158,11 @@ def get_plugin_manager() -> pluggy.PluginManager:
 
 
 def create_application(settings: Settings) -> Application:
+    """Create main Applicaiton.
+
+    Args:
+        settings: application settings
+    """
     pm = get_plugin_manager()
 
     log_providers = [GitLogProvider(), FilesLogProvider()]

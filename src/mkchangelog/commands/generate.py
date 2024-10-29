@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-import argparse
 import logging
 import sys
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 
-from mkchangelog.app import Application
 from mkchangelog.commands import Command
+
+if TYPE_CHECKING:
+    import argparse
+
+    from mkchangelog.app import Application
 
 logger = logging.getLogger()
 
@@ -19,7 +23,7 @@ class GenerateCommand(Command):
     aliases = ("g", "gen")
 
     @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser):
+    def add_arguments(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "-o",
             "--output",
@@ -85,14 +89,14 @@ class GenerateCommand(Command):
         )
 
     @classmethod
-    def execute(cls, args: argparse.Namespace, app: Application):
+    def execute(cls, args: argparse.Namespace, app: Application) -> None:
         options = app.settings.apply_args(args)
 
-        logging.info(f"[generate] template={options.template}")
-        logging.info(f"[generate] commit_types={options.commit_types_list}")
-        logging.info(f"[generate] unreleased={options.unreleased}")
-        logging.info(f"[generate] unreleased_version={options.unreleased_version}")
-        logging.info(f"[generate] hide_empty_releases={options.hide_empty_releases}")
+        logger.info("[generate] template=%s", options.template)
+        logger.info("[generate] commit_types=%s", options.commit_types_list)
+        logger.info("[generate] unreleased=%s", options.unreleased)
+        logger.info("[generate] unreleased_version=%s", options.unreleased_version)
+        logger.info("[generate] hide_empty_releases=%s", options.hide_empty_releases)
 
         changelog = app.render_changelog(
             title=options.changelog_title,

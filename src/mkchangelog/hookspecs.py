@@ -16,4 +16,4 @@ def provide_template_filters(settings: Settings) -> Dict[str, Callable[[Any], st
 
 @hookspec
 def provide_changelog_loglines_filter(settings: Settings) -> Callable[[List[LogLine]], List[LogLine]]:
-    """Filter changelog loglines"""
+    """Filter changelog loglines."""

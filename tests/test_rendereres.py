@@ -10,7 +10,7 @@ from mkchangelog.renderers import TextChangelogRenderer
 
 
 class TestTextRenderer:
-    def test_breaking_changes_presented(self):
+    def test_breaking_changes_presented(self) -> None:
         line = GitMessageParser(Settings()).parse(
             "feat(core)!: some important stuff here\n\nBREAKING CHANGE: bad news for compatibility"
         )
@@ -31,13 +31,13 @@ class TestTextRenderer:
 
 
 @pytest.mark.parametrize(
-    "value,pattern,replacement,ignorecase,multiline,expected",
-    (
+    ("value", "pattern", "replacement", "ignorecase", "multiline", "expected"),
+    [
         ("line with #12 issue ref", r"#(\d+)", "#ISSUE-\\1", False, False, "line with #ISSUE-12 issue ref"),
         ("localhost:80", "^(?P<host>.+):(?P<port>\\d+)$", "\\g<host>, \\g<port>", False, False, "localhost, 80"),
         ("some CASE1 test", r"[a-z]", "x", False, False, "xxxx CASE1 xxxx"),
         ("some CASE2 test", r"[a-z]", "x", True, False, "xxxx xxxx2 xxxx"),
-    ),
+    ],
 )
 def test_regex_replace_filter(  # noqa: #FBT001
     value: str,
@@ -46,5 +46,5 @@ def test_regex_replace_filter(  # noqa: #FBT001
     ignorecase: bool,  # noqa: FBT001
     multiline: bool,  # noqa: FBT001
     expected: str,
-):
+) -> None:
     assert regex_replace_filter(value, pattern, replacement, ignorecase, multiline) == expected

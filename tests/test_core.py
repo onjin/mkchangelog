@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from typing import ClassVar, Dict, Generator, List, Optional
+from typing import ClassVar, Generator
 
 import pytest
 
@@ -13,7 +13,7 @@ from mkchangelog.parser import GitMessageParser
 from mkchangelog.providers import LogProvider, LogProviderOptions, VersionsProvider
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc) -> None:
     # called once per each test function
     if not metafunc.cls:
         return
@@ -29,8 +29,8 @@ def log_line(message: str) -> LogLine:
     return parser.parse(message)
 
 
-def log_lines(messages: List[str]) -> List[LogLine]:
-    lines: List[LogLine] = []
+def log_lines(messages: list[str]) -> list[LogLine]:
+    lines: list[LogLine] = []
     for msg in messages:
         with contextlib.suppress(ValueError):
             lines.append(log_line(msg))
@@ -77,18 +77,18 @@ refactor = 4
 
 
 class MockVersionsProvider(VersionsProvider):
-    def __init__(self, versions: Optional[list[Version]] = None):
+    def __init__(self, versions: list[Version] | None = None) -> None:
         self._versions = versions or []
 
-    def get_versions(self, limit: Optional[int] = None) -> list[Version]:  # noqa: ARG002
+    def get_versions(self, limit: int | None = None) -> list[Version]:  # noqa: ARG002
         return self._versions
 
-    def get_last_version(self) -> Optional[Version]:
+    def get_last_version(self) -> Version | None:
         return self._versions[0] if self._versions else None
 
 
 class MockLogProvider(LogProvider):
-    def __init__(self, log: Optional[list[str]] = None, versions: Optional[list[Version]] = None):
+    def __init__(self, log: list[str] | None = None, versions: list[Version] | None = None) -> None:
         self._log = log or []
         self._versions = versions or []
 
@@ -100,15 +100,15 @@ class MockLogProvider(LogProvider):
 
 
 @pytest.mark.parametrize(
-    "current_version,commits,next_version",
+    ("current_version", "commits", "next_version"),
     [
         ("v1.2.3", ["feat(api): some\n\nBREAKING CHANGE: API broken\nbadly\n\n"], "v2.0.0"),
         ("v1.2.4", ["feat(api)!: break indicator"], "v2.0.0"),
     ],
 )
-def test_next_version_for_breaking_changes(current_version: str, commits: list[str], next_version: str):
+def test_next_version_for_breaking_changes(current_version: str, commits: list[str], next_version: str) -> None:
     # Given - current version and commits with breaking changes
-    commits: List[LogLine] = [log_line(message) for message in commits]
+    commits: list[LogLine] = [log_line(message) for message in commits]
 
     # When - we get next version
     version = get_next_version("v", current_version, commits)
@@ -117,20 +117,20 @@ def test_next_version_for_breaking_changes(current_version: str, commits: list[s
     assert version.name == next_version, version
 
 
-class TestChangelogGenerator(object):
+class TestChangelogGenerator:
     @dataclass
-    class ParamsForChangelog(object):
+    class ParamsForChangelog:
         input_log: list[str]
         input_versions: list[Version]
         output_versions: list[str]
-        output_changes: Dict[str, Dict[CommitType, list[LogLine]]]
+        output_changes: dict[str, dict[CommitType, list[LogLine]]]
 
     @dataclass
-    class ParamsForChangelogSection(object):
+    class ParamsForChangelogSection:
         input_log: list[str]
         input_versions: list[Version]
         output_version: str
-        output_changes: Dict[CommitType, list[LogLine]]
+        output_changes: dict[CommitType, list[LogLine]]
 
     params: ClassVar = {
         "test_get_changelog_section": [
@@ -236,7 +236,7 @@ class TestChangelogGenerator(object):
         ],
     }
 
-    def test_get_changelog_section(self, parameters: ParamsForChangelogSection):
+    def test_get_changelog_section(self, parameters: ParamsForChangelogSection) -> None:
         section = ChangelogGenerator(
             settings=get_settings(),
             log_providers=[MockLogProvider(log=parameters.input_log)],
@@ -247,7 +247,7 @@ class TestChangelogGenerator(object):
         assert section.version.name == parameters.output_version
         assert section.changes == parameters.output_changes
 
-    def test_get_changelog(self, parameters: ParamsForChangelog):
+    def test_get_changelog(self, parameters: ParamsForChangelog) -> None:
         generator = changelog = ChangelogGenerator(
             settings=get_settings(),
             log_providers=[MockLogProvider(log=parameters.input_log)],
@@ -262,5 +262,5 @@ class TestChangelogGenerator(object):
             assert section.version is not None
             assert section.version.name == version_name
             assert len(section.changes.keys()) == len(parameters.output_changes[version_name].keys())
-            for commit_type in section.changes.keys():
+            for commit_type in section.changes:
                 assert section.changes[commit_type] == parameters.output_changes[version_name][commit_type], commit_type

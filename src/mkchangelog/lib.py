@@ -23,13 +23,12 @@ def regex_replace_filter(
     count: int = 0,
     mandatory_count: int = 0,
 ) -> str:
-    """Perform a `re.sub` returning a string"""
-
+    """Perform a `re.sub` returning a string."""
     flags = 0
     if ignorecase:
-        flags |= re.I
+        flags |= re.IGNORECASE
     if multiline:
-        flags |= re.M
+        flags |= re.MULTILINE
     _re = re.compile(pattern, flags=flags)
     (output, subs) = _re.subn(replacement, value, count=count)
     if mandatory_count and mandatory_count != subs:
