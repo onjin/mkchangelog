@@ -6,7 +6,6 @@ help:
 	@echo ""
 	@echo "  test       to run all tests on the current python version"
 	@echo "  test-all   to run all tests on all supported python versions"
-	@echo "  example    to run the example end to end tests (requires docker)"
 	@echo "  lint       to run the lints"
 	@echo "  ci         to run test and lints"
 	@echo ""
@@ -39,11 +38,6 @@ test:
 .PHONY: test-all
 test-all:
 	hatch run test:test
-
-
-.PHONY: example
-example:
-	hatch run example
 
 
 .PHONY: lint
