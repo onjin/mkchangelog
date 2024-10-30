@@ -36,8 +36,8 @@
             # Here is a good spot to add on any missing or custom attributes.
           in python.pkgs.buildPythonPackage (attrs // {
             # Because we're following main, use the git rev as version
-            version =
-              if (self ? rev) then self.shortRev else self.dirtyShortRev;
+            version = "0.0.0.dev+local";
+            # version = if (self ? rev) then self.shortRev else self.dirtyShortRev;
           });
           default = self.packages.${system}.mkchangelog;
         };
@@ -63,6 +63,8 @@
               pkgs.mypy
               pkgs.black
               pypkgs.keyrings-alt
+              pypkgs.hatch-vcs
+              pypkgs.pip
             ];
             shellHook = ''
               export PYTHONPATH="$(pwd):$PYTHONPATH"
