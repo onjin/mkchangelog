@@ -30,6 +30,11 @@ Example generated changelog: [CHANGELOG.md](CHANGELOG.md)
 pip install mkchangelog
 ```
 
+or use docker image: 
+```console
+docker run -t -v .:/app onjin/mkchangelog generate
+```
+
 ## Usage
 
 The list of versions is taken from list of signed git tags detected by prefix (default `v`, f.e. `v1.3.4`).

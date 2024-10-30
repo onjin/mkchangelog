@@ -49,3 +49,7 @@ lint:
 
 .PHONY: ci
 ci: test lint
+
+.PHONY: docker
+docker:
+	docker build --build-arg MKCHANGELOG_VERSION=v2.6.0 -t onjin/mkchangelog:v2.6.0 .
