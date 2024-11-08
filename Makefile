@@ -1,3 +1,4 @@
+VERSION := $(shell curl -s https://pypi.org/simple/mkchangelog/ -H Accept:application/vnd.pypi.simple.v1+json|jq -r '.versions[-1]')
 help:
 	@echo ""
 	@echo "  clean      to clear build and distribution directories"
@@ -52,4 +53,10 @@ ci: test lint
 
 .PHONY: docker
 docker:
-	docker build --build-arg MKCHANGELOG_VERSION=v2.6.0 -t onjin/mkchangelog:v2.6.0 .
+	docker build --build-arg MKCHANGELOG_VERSION=v${VERSION} -t onjin/mkchangelog:v$(VERSION) .
+	docker tag onjin/mkchangelog:v$(VERSION) onjin/mkchangelog:latest
+
+.PHONY: docker-push
+docker-push: docker
+	docker push onjin/mkchangelog:v$(VERSION)
+	docker push onjin/mkchangelog:latest

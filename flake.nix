@@ -57,13 +57,15 @@
             packages = [
               self.packages.${system}.mkchangelog
               pythonEnv
+              pkgs.black
+              pkgs.curl
               pkgs.gnumake
               pkgs.hatch
-              pkgs.ruff
+              pkgs.jq
               pkgs.mypy
-              pkgs.black
-              pypkgs.keyrings-alt
+              pkgs.ruff
               pypkgs.hatch-vcs
+              pypkgs.keyrings-alt
               pypkgs.pip
             ];
             shellHook = ''
