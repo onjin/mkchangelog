@@ -31,7 +31,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@3b9817b1bf26186f03ab8277bab9b827ea5cc254 # v3.2.0
+      uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
       with:
         enable-cache: true
         cache-dependency-glob: |
