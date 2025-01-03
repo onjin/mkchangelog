@@ -45,7 +45,8 @@ devel-test = [
   "pytest            ~=8.0",
   "pytest-cov        ~=5.0",
 ]
-devel = ["mkchangelog[devel-types,devel-test]", "ruff==0.7.1"]
+devel-docs = ["mkdocs", "mkdocs-material"]
+devel = ["mkchangelog[devel-docs,devel-types,devel-test]", "ruff==0.7.1"]
 
 ################################################################################
 ## Hatch Build Configuration

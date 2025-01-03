@@ -47,6 +47,9 @@ lint:
 	hatch run format
 	hatch run typecheck
 
+.PHONY: docs
+docs:
+	hatch run mkdocs build
 
 .PHONY: ci
 ci: test lint

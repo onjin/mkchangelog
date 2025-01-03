@@ -4,6 +4,7 @@
 
 # Version is determined from the VCS
 src/mkchangelog/__version__.py
+site
 
 ################################################################################
 ## Standard Templates

@@ -1,0 +1,7 @@
+site_name: mkchangelog
+site_url: https://mkchangelog
+repo_url: https://github.com/onjin/mkchangelog
+repo_name: onjin/mkchangelog
+
+theme:
+  name: material
